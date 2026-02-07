@@ -38,6 +38,8 @@
       <el-table-column label="设备描述" align="center" prop="equipDesc" min-width="140" show-overflow-tooltip />
       <el-table-column label="使用科室" align="center" prop="useDept" min-width="120" show-overflow-tooltip />
       <el-table-column label="工作时间" align="center" prop="workHours" width="120" />
+      <el-table-column label="每周工作天数" align="center" prop="weekWorkDays" width="120" />
+      <el-table-column label="日均服务例数" align="center" prop="treatCount" width="120" />
       <el-table-column label="收费价格" align="center" prop="unitChargePrice" width="120" />
       <el-table-column label="操作" align="center" width="140" class-name="small-padding fixed-width">
         <template slot-scope="scope">
@@ -66,6 +68,12 @@
         </el-form-item>
         <el-form-item label="工作时间" prop="workHours">
           <el-input-number v-model="form.workHours" :min="0" :precision="2" controls-position="right" style="width:100%" placeholder="小时" />
+        </el-form-item>
+        <el-form-item label="每周工作天数" prop="weekWorkDays">
+          <el-input-number v-model="form.weekWorkDays" :min="0" :max="7" :precision="0" controls-position="right" style="width:100%" placeholder="天" />
+        </el-form-item>
+        <el-form-item label="日均服务例数" prop="treatCount">
+          <el-input-number v-model="form.treatCount" :min="0" :precision="0" controls-position="right" style="width:100%" placeholder="例" />
         </el-form-item>
         <el-form-item label="收费价格" prop="unitChargePrice">
           <el-input-number v-model="form.unitChargePrice" :min="0" :precision="2" controls-position="right" style="width:100%" placeholder="元" />
@@ -142,7 +150,7 @@ export default {
       this.reset()
     },
     reset() {
-      this.form = { id: undefined, useDept: undefined, equipId: undefined, reportDate: undefined, workHours: undefined, unitChargePrice: undefined, remark: undefined }
+      this.form = { id: undefined, useDept: undefined, equipId: undefined, reportDate: undefined, workHours: undefined, weekWorkDays: undefined, treatCount: undefined, unitChargePrice: undefined, remark: undefined }
       this.keyEquipOptions = []
       this.resetForm('form')
     },
@@ -163,10 +171,9 @@ export default {
       this.reset()
       // 设置上报日期默认为当天
       const today = new Date()
-      const year = today.getFullYear()
-      const month = String(today.getMonth() + 1).padStart(2, '0')
-      const day = String(today.getDate()).padStart(2, '0')
-      this.form.reportDate = `${year}-${month}-${day}`
+      this.form.reportDate = today.getFullYear() + '-' + 
+        String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(today.getDate()).padStart(2, '0')
       this.open = true
       this.title = '新增使用统计'
     },

@@ -6,7 +6,6 @@ import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
  * 重点设备月度使用上报 cst_key_equip_usage
- * <p>每一个上报数据即为一例（每条记录对应一例，不单独维护诊治例数）。</p>
  *
  * @author ruoyi
  */
@@ -21,11 +20,15 @@ public class CstKeyEquipUsage extends BaseEntity {
     /** 上报日期 yyyy-MM-dd */
     @Excel(name = "上报日期", dateFormat = "yyyy-MM-dd")
     private String reportDate;
-    /** 诊治例数：每条上报记录即为一例，新增时默认为 1 */
+    /** 日均服务例数 */
+    @Excel(name = "日均服务例数")
     private Integer treatCount;
     /** 工作时间 */
     @Excel(name = "工作时间")
     private BigDecimal workHours;
+    /** 每周工作天数 */
+    @Excel(name = "每周工作天数")
+    private Integer weekWorkDays;
     /** 收费价格 */
     @Excel(name = "收费价格")
     private BigDecimal unitChargePrice;
@@ -46,6 +49,8 @@ public class CstKeyEquipUsage extends BaseEntity {
     public void setTreatCount(Integer treatCount) { this.treatCount = treatCount; }
     public BigDecimal getWorkHours() { return workHours; }
     public void setWorkHours(BigDecimal workHours) { this.workHours = workHours; }
+    public Integer getWeekWorkDays() { return weekWorkDays; }
+    public void setWeekWorkDays(Integer weekWorkDays) { this.weekWorkDays = weekWorkDays; }
     public BigDecimal getUnitChargePrice() { return unitChargePrice; }
     public void setUnitChargePrice(BigDecimal unitChargePrice) { this.unitChargePrice = unitChargePrice; }
     public String getEquipNo() { return equipNo; }

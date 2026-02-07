@@ -42,9 +42,6 @@ public class CstKeyEquipUsageServiceImpl implements ICstKeyEquipUsageService {
             return cstKeyEquipUsageMapper.updateCstKeyEquipUsage(row);
         }
         row.setCreateBy(SecurityUtils.getUsername());
-        if (row.getTreatCount() == null) {
-            row.setTreatCount(1);
-        }
         return cstKeyEquipUsageMapper.insertCstKeyEquipUsage(row);
     }
 

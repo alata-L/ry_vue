@@ -8,6 +8,7 @@
         <result property="reportDate"     column="report_date"      />
         <result property="treatCount"     column="treat_count"      />
         <result property="workHours"      column="work_hours"      />
+        <result property="weekWorkDays"   column="week_work_days"   />
         <result property="unitChargePrice" column="unit_charge_price" />
         <result property="createBy"       column="create_by"      />
         <result property="createTime"     column="create_time"     />
@@ -20,7 +21,7 @@
     </resultMap>
 
     <sql id="selectCstKeyEquipUsageVo">
-        select u.id, u.equip_id, u.report_date, u.treat_count, u.work_hours, u.unit_charge_price, u.create_by, u.create_time, u.update_by, u.update_time, u.remark,
+        select u.id, u.equip_id, u.report_date, u.treat_count, u.work_hours, u.week_work_days, u.unit_charge_price, u.create_by, u.create_time, u.update_by, u.update_time, u.remark,
                e.equip_no, e.equip_desc, e.use_dept from cst_key_equip_usage u left join cst_key_equip e on u.equip_id = e.id
     </sql>
 
@@ -40,13 +41,13 @@
     </select>
 
     <select id="selectByEquipIdAndReportDate" resultMap="CstKeyEquipUsageResult">
-        select id, equip_id, report_date, treat_count, work_hours, unit_charge_price, create_by, create_time, update_by, update_time, remark
+        select id, equip_id, report_date, treat_count, work_hours, week_work_days, unit_charge_price, create_by, create_time, update_by, update_time, remark
         from cst_key_equip_usage where equip_id = #{equipId} and report_date = #{reportDate} limit 1
     </select>
 
     <insert id="insertCstKeyEquipUsage" parameterType="com.ruoyi.custom.domain.CstKeyEquipUsage" useGeneratedKeys="true" keyProperty="id">
-        insert into cst_key_equip_usage (equip_id, report_date, treat_count, work_hours, unit_charge_price, create_by, create_time, remark)
-        values (#{equipId}, #{reportDate}, #{treatCount}, #{workHours}, #{unitChargePrice}, #{createBy}, sysdate(), #{remark})
+        insert into cst_key_equip_usage (equip_id, report_date, treat_count, work_hours, week_work_days, unit_charge_price, create_by, create_time, remark)
+        values (#{equipId}, #{reportDate}, #{treatCount}, #{workHours}, #{weekWorkDays}, #{unitChargePrice}, #{createBy}, sysdate(), #{remark})
     </insert>
 
     <update id="updateCstKeyEquipUsage" parameterType="com.ruoyi.custom.domain.CstKeyEquipUsage">
@@ -54,6 +55,7 @@
         <set>
             <if test="treatCount != null">treat_count = #{treatCount},</if>
             <if test="workHours != null">work_hours = #{workHours},</if>
+            <if test="weekWorkDays != null">week_work_days = #{weekWorkDays},</if>
             <if test="unitChargePrice != null">unit_charge_price = #{unitChargePrice},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
             update_time = sysdate(),
