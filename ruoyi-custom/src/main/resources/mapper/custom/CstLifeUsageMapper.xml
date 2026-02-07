@@ -107,4 +107,56 @@
         group by use_dept
         order by totalCount desc
     </select>
+
+    <!-- 生命支持类统计：全院使用趋势（按日、月、年，按设备类型，日均数据） -->
+    <select id="sumUsageTrendByType" resultType="map">
+        select
+        <choose>
+            <when test="groupBy == 'month'">date_format(stat_date, '%Y-%m') as statPeriod,</when>
+            <when test="groupBy == 'year'">date_format(stat_date, '%Y') as statPeriod,</when>
+            <otherwise>stat_date as statPeriod,</otherwise>
+        </choose>
+        equip_type as equipType,
+        <choose>
+            <when test="groupBy == 'month'">ifnull(sum(used_count) / count(distinct stat_date), 0) as avgDailyCount</when>
+            <when test="groupBy == 'year'">ifnull(sum(used_count) / count(distinct stat_date), 0) as avgDailyCount</when>
+            <otherwise>ifnull(sum(used_count), 0) as avgDailyCount</otherwise>
+        </choose>
+        from cst_life_usage
+        where stat_date &gt;= #{start} and stat_date &lt;= #{end}
+          and equip_type = #{equipType}
+        group by
+        <choose>
+            <when test="groupBy == 'month'">date_format(stat_date, '%Y-%m')</when>
+            <when test="groupBy == 'year'">date_format(stat_date, '%Y')</when>
+            <otherwise>stat_date</otherwise>
+        </choose>
+        order by statPeriod
+    </select>
+
+    <!-- 生命支持类统计：科室排名TOP5（按日、月、年，按设备类型，日均数据） -->
+    <select id="sumUsageDeptRankByType" resultType="map">
+        select
+        <choose>
+            <when test="groupBy == 'month'">date_format(stat_date, '%Y-%m') as statPeriod,</when>
+            <when test="groupBy == 'year'">date_format(stat_date, '%Y') as statPeriod,</when>
+            <otherwise>stat_date as statPeriod,</otherwise>
+        </choose>
+        use_dept as useDept,
+        <choose>
+            <when test="groupBy == 'month'">ifnull(sum(used_count) / count(distinct stat_date), 0) as avgDailyCount</when>
+            <when test="groupBy == 'year'">ifnull(sum(used_count) / count(distinct stat_date), 0) as avgDailyCount</when>
+            <otherwise>ifnull(sum(used_count), 0) as avgDailyCount</otherwise>
+        </choose>
+        from cst_life_usage
+        where stat_date &gt;= #{start} and stat_date &lt;= #{end}
+          and equip_type = #{equipType}
+        group by
+        <choose>
+            <when test="groupBy == 'month'">date_format(stat_date, '%Y-%m'), use_dept</when>
+            <when test="groupBy == 'year'">date_format(stat_date, '%Y'), use_dept</when>
+            <otherwise>stat_date, use_dept</otherwise>
+        </choose>
+        order by statPeriod, avgDailyCount desc
+    </select>
 </mapper>

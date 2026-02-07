@@ -39,4 +39,10 @@ public interface ICstKeyStatsService {
      * 首页：重点设备今年收费 TOP N，返回 equipId/equipNo/equipDesc/useDept/totalCharge/totalTreat
      */
     List<Map<String, Object>> getKeyEquipTopByCharge(int limit);
+
+    /**
+     * 首页：按价格范围筛选的TOP10设备按月序列（收费、工作时长、诊疗例数）
+     * 返回 key: thisYear / lastYear，value: List<Map> 每项 period(yyyy-MM), totalCharge, totalWorkHours, totalTreat
+     */
+    Map<String, List<Map<String, Object>>> getTopEquipMonthlySeriesByValue(Long minValue, int limit);
 }

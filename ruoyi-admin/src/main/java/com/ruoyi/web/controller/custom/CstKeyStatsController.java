@@ -66,4 +66,17 @@ public class CstKeyStatsController extends BaseController {
         List<Map<String, Object>> list = cstKeyStatsService.getEquipSeries(equipId, groupBy, beginTime, endTime);
         return success(list);
     }
+
+    /** 首页：按价格范围筛选的TOP10设备按月序列（收费、工作时长、诊疗例数） */
+    @PreAuthorize("@ss.hasPermi('custom:keyEquip:list')")
+    @GetMapping("/topEquipSeriesByValue")
+    public AjaxResult topEquipSeriesByValue(
+            @RequestParam(required = false, defaultValue = "500000") Long minValue,
+            @RequestParam(required = false, defaultValue = "10") Integer limit) {
+        Map<String, List<Map<String, Object>>> data = cstKeyStatsService.getTopEquipMonthlySeriesByValue(
+            minValue != null ? minValue : 500000L,
+            limit != null ? limit : 10
+        );
+        return success(data);
+    }
 }

@@ -30,4 +30,10 @@ public interface CstKeyEquipMapper {
 
     /** 按科室汇总：科室、设备数量、设备价值 */
     List<Map<String, Object>> selectDeptEquipStats();
+
+    /** 按价格范围统计（≥50万）：设备数量、设备价值 */
+    Map<String, Object> selectSummaryByValue50();
+
+    /** 按价格范围统计（≥100万）：设备数量、设备价值 */
+    Map<String, Object> selectSummaryByValue100();
 }

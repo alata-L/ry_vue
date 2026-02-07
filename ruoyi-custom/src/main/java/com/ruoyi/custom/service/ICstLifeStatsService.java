@@ -19,4 +19,19 @@ public interface ICstLifeStatsService {
      * 首页：科室使用台数排名（今年），返回 useDept/totalCount
      */
     List<Map<String, Object>> getUsageByDept();
+
+    /**
+     * 首页：获取设备台数统计（按类型），返回 equipType/count
+     */
+    Map<String, Long> getEquipCountByType();
+
+    /**
+     * 首页：全院使用趋势（按日、月、年，按设备类型，日均数据），返回 statPeriod/avgDailyCount
+     */
+    List<Map<String, Object>> getUsageTrendByType(String equipType, String groupBy);
+
+    /**
+     * 首页：科室排名TOP5（按日、月、年，按设备类型，日均数据），返回 statPeriod/useDept/avgDailyCount
+     */
+    List<Map<String, Object>> getUsageDeptRankByType(String equipType, String groupBy);
 }

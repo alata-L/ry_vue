@@ -15,3 +15,29 @@ export function getLifeUsageByDept() {
     method: 'get'
   })
 }
+
+/** 首页：获取设备台数统计（按类型） */
+export function getLifeEquipCountByType() {
+  return request({
+    url: '/custom/lifeStats/equipCountByType',
+    method: 'get'
+  })
+}
+
+/** 首页：全院使用趋势（按日、月、年，按设备类型，日均数据） */
+export function getLifeUsageTrendByType(equipType, groupBy) {
+  return request({
+    url: '/custom/lifeStats/usageTrendByType',
+    method: 'get',
+    params: { equipType, groupBy: groupBy || 'day' }
+  })
+}
+
+/** 首页：科室排名TOP5（按日、月、年，按设备类型，日均数据） */
+export function getLifeUsageDeptRankByType(equipType, groupBy) {
+  return request({
+    url: '/custom/lifeStats/usageDeptRankByType',
+    method: 'get',
+    params: { equipType, groupBy: groupBy || 'day' }
+  })
+}

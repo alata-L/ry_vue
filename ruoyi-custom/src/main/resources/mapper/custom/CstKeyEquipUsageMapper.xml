@@ -166,4 +166,37 @@
         order by totalCharge desc
         limit #{limit}
     </select>
+
+    <!-- 重点设备统计：按价格范围筛选的TOP10设备（≥50万或≥100万），按 totalCharge 降序取前 limit 条 -->
+    <select id="topEquipByChargeInRangeAndValue" resultType="map">
+        select e.id as equipId, e.equip_no as equipNo, e.equip_desc as equipDesc, e.use_dept as useDept,
+               ifnull(sum(u.treat_count * u.unit_charge_price), 0) as totalCharge,
+               ifnull(sum(u.treat_count), 0) as totalTreat,
+               ifnull(sum(u.work_hours), 0) as totalWorkHours
+        from cst_key_equip_usage u
+        join cst_key_equip e on u.equip_id = e.id
+        where u.report_date &gt;= #{start} and u.report_date &lt;= #{end}
+          and e.total_value &gt;= #{minValue} and e.status = '0'
+        group by u.equip_id, e.id, e.equip_no, e.equip_desc, e.use_dept
+        order by totalCharge desc
+        limit #{limit}
+    </select>
+
+    <!-- 重点设备统计：TOP10设备按月序列（收费、工作时长、诊疗例数） -->
+    <select id="topEquipMonthlySeries" resultType="map">
+        select date_format(u.report_date, '%Y-%m') as period,
+               ifnull(sum(u.treat_count * u.unit_charge_price), 0) as totalCharge,
+               ifnull(sum(u.work_hours), 0) as totalWorkHours,
+               ifnull(sum(u.treat_count), 0) as totalTreat
+        from cst_key_equip_usage u
+        join cst_key_equip e on u.equip_id = e.id
+        where u.report_date &gt;= #{start} and u.report_date &lt;= #{end}
+          and e.total_value &gt;= #{minValue} and e.status = '0'
+          and e.id in
+        <foreach collection="equipIds" item="equipId" open="(" separator="," close=")">
+            #{equipId}
+        </foreach>
+        group by date_format(u.report_date, '%Y-%m')
+        order by period
+    </select>
 </mapper>

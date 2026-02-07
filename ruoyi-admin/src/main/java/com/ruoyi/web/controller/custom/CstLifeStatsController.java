@@ -38,4 +38,32 @@ public class CstLifeStatsController extends BaseController {
         List<Map<String, Object>> list = cstLifeStatsService.getUsageByDept();
         return success(list);
     }
+
+    /** 首页：获取设备台数统计（按类型） */
+    @PreAuthorize("@ss.hasPermi('custom:lifeStats:list')")
+    @GetMapping("/equipCountByType")
+    public AjaxResult equipCountByType() {
+        Map<String, Long> data = cstLifeStatsService.getEquipCountByType();
+        return success(data);
+    }
+
+    /** 首页：全院使用趋势（按日、月、年，按设备类型，日均数据） */
+    @PreAuthorize("@ss.hasPermi('custom:lifeStats:list')")
+    @GetMapping("/usageTrendByType")
+    public AjaxResult usageTrendByType(
+            @org.springframework.web.bind.annotation.RequestParam String equipType,
+            @org.springframework.web.bind.annotation.RequestParam(required = false, defaultValue = "day") String groupBy) {
+        List<Map<String, Object>> list = cstLifeStatsService.getUsageTrendByType(equipType, groupBy);
+        return success(list);
+    }
+
+    /** 首页：科室排名TOP5（按日、月、年，按设备类型，日均数据） */
+    @PreAuthorize("@ss.hasPermi('custom:lifeStats:list')")
+    @GetMapping("/usageDeptRankByType")
+    public AjaxResult usageDeptRankByType(
+            @org.springframework.web.bind.annotation.RequestParam String equipType,
+            @org.springframework.web.bind.annotation.RequestParam(required = false, defaultValue = "day") String groupBy) {
+        List<Map<String, Object>> list = cstLifeStatsService.getUsageDeptRankByType(equipType, groupBy);
+        return success(list);
+    }
 }

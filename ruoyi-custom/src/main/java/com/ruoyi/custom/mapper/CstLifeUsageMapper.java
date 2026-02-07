@@ -34,4 +34,10 @@ public interface CstLifeUsageMapper {
 
     /** 指定日期范围内按科室汇总使用台数，返回 useDept/totalCount */
     List<Map<String, Object>> sumUsageByDeptInRange(@Param("start") String start, @Param("end") String end);
+
+    /** 全院使用趋势（按日、月、年，按设备类型，日均数据），返回 statPeriod/equipType/avgDailyCount */
+    List<Map<String, Object>> sumUsageTrendByType(@Param("start") String start, @Param("end") String end, @Param("equipType") String equipType, @Param("groupBy") String groupBy);
+
+    /** 科室排名TOP5（按日、月、年，按设备类型，日均数据），返回 statPeriod/useDept/avgDailyCount */
+    List<Map<String, Object>> sumUsageDeptRankByType(@Param("start") String start, @Param("end") String end, @Param("equipType") String equipType, @Param("groupBy") String groupBy);
 }

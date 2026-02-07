@@ -42,3 +42,12 @@ export function getKeyStatsEquipSeries(equipId, params) {
     params: params || {}
   })
 }
+
+/** 首页：按价格范围筛选的TOP10设备按月序列（收费、工作时长、诊疗例数） */
+export function getTopEquipSeriesByValue(minValue, limit) {
+  return request({
+    url: '/custom/keyStats/topEquipSeriesByValue',
+    method: 'get',
+    params: { minValue: minValue || 500000, limit: limit || 10 }
+  })
+}

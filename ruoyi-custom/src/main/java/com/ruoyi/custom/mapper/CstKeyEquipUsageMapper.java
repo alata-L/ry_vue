@@ -46,4 +46,10 @@ public interface CstKeyEquipUsageMapper {
 
     /** 指定日期范围内按设备汇总收费，按 totalCharge 降序，取前 limit 条，返回 equipId/equipNo/equipDesc/useDept/totalCharge/totalTreat */
     List<Map<String, Object>> topEquipByChargeInRange(@Param("start") String start, @Param("end") String end, @Param("limit") int limit);
+
+    /** 按价格范围筛选的TOP10设备（≥50万或≥100万），按 totalCharge 降序，返回 equipId/equipNo/equipDesc/useDept/totalCharge/totalTreat/totalWorkHours */
+    List<Map<String, Object>> topEquipByChargeInRangeAndValue(@Param("start") String start, @Param("end") String end, @Param("minValue") Long minValue, @Param("limit") int limit);
+
+    /** TOP10设备按月序列（收费、工作时长、诊疗例数），返回 period/totalCharge/totalWorkHours/totalTreat */
+    List<Map<String, Object>> topEquipMonthlySeries(@Param("start") String start, @Param("end") String end, @Param("minValue") Long minValue, @Param("equipIds") List<Long> equipIds);
 }

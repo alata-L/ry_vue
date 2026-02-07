@@ -54,6 +54,27 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
             summary.put("equipCount", 0L);
             summary.put("totalValue", BigDecimal.ZERO);
         }
+        
+        // 按价格范围统计（≥50万）
+        Map<String, Object> equipSummary50 = cstKeyEquipMapper.selectSummaryByValue50();
+        if (equipSummary50 != null) {
+            summary.put("equipCount50", toLong(equipSummary50.get("equipCount")));
+            summary.put("totalValue50", equipSummary50.get("totalValue"));
+        } else {
+            summary.put("equipCount50", 0L);
+            summary.put("totalValue50", BigDecimal.ZERO);
+        }
+        
+        // 按价格范围统计（≥100万）
+        Map<String, Object> equipSummary100 = cstKeyEquipMapper.selectSummaryByValue100();
+        if (equipSummary100 != null) {
+            summary.put("equipCount100", toLong(equipSummary100.get("equipCount")));
+            summary.put("totalValue100", equipSummary100.get("totalValue"));
+        } else {
+            summary.put("equipCount100", 0L);
+            summary.put("totalValue100", BigDecimal.ZERO);
+        }
+        
         putChargeAndTreat(summary, "ThisMonth", sumInRange(thisMonthStart, thisMonthEnd));
         putChargeAndTreat(summary, "LastMonth", sumInRange(lastMonthStart, lastMonthEnd));
         putChargeAndTreat(summary, "ThisYear", sumInRange(thisYearStart, thisYearEnd));
@@ -244,6 +265,76 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
         String end = now.format(FMT);
         List<Map<String, Object>> list = cstKeyEquipUsageMapper.topEquipByChargeInRange(start, end, limit);
         return list != null ? list : new ArrayList<>();
+    }
+
+    @Override
+    public Map<String, List<Map<String, Object>>> getTopEquipMonthlySeriesByValue(Long minValue, int limit) {
+        if (minValue == null) minValue = 500000L;
+        if (limit <= 0) limit = 10;
+        
+        LocalDate now = LocalDate.now();
+        int year = now.getYear();
+        String thisYearStart = LocalDate.of(year, 1, 1).format(FMT);
+        String thisYearEnd = now.format(FMT);
+        String lastYearStart = LocalDate.of(year - 1, 1, 1).format(FMT);
+        String lastYearEnd = LocalDate.of(year - 1, 12, 31).format(FMT);
+
+        // 获取今年TOP10设备ID列表
+        List<Map<String, Object>> topEquipList = cstKeyEquipUsageMapper.topEquipByChargeInRangeAndValue(thisYearStart, thisYearEnd, minValue, limit);
+        List<Long> equipIds = new ArrayList<>();
+        if (topEquipList != null && !topEquipList.isEmpty()) {
+            for (Map<String, Object> row : topEquipList) {
+                Object equipId = row.get("equipId");
+                if (equipId != null) {
+                    equipIds.add(toLong(equipId));
+                }
+            }
+        }
+
+        // 获取今年和去年的按月序列数据
+        List<Map<String, Object>> thisYearList = new ArrayList<>();
+        List<Map<String, Object>> lastYearList = new ArrayList<>();
+        
+        if (!equipIds.isEmpty()) {
+            thisYearList = cstKeyEquipUsageMapper.topEquipMonthlySeries(thisYearStart, thisYearEnd, minValue, equipIds);
+            lastYearList = cstKeyEquipUsageMapper.topEquipMonthlySeries(lastYearStart, lastYearEnd, minValue, equipIds);
+        }
+
+        // 构建完整的12个月数据
+        List<Map<String, Object>> thisYearFull = buildFullYearSeries(thisYearList, year);
+        List<Map<String, Object>> lastYearFull = buildFullYearSeries(lastYearList, year - 1);
+
+        Map<String, List<Map<String, Object>>> result = new HashMap<>();
+        result.put("thisYear", thisYearFull);
+        result.put("lastYear", lastYearFull);
+        return result;
+    }
+
+    private List<Map<String, Object>> buildFullYearSeries(List<Map<String, Object>> list, int year) {
+        Map<String, Map<String, Object>> byPeriod = new HashMap<>();
+        if (list != null) {
+            for (Map<String, Object> row : list) {
+                Object period = row.get("period");
+                if (period != null) {
+                    byPeriod.put(period.toString(), row);
+                }
+            }
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (int month = 1; month <= 12; month++) {
+            String period = String.format("%04d-%02d", year, month);
+            Map<String, Object> row = byPeriod.get(period);
+            if (row == null) {
+                row = new HashMap<>();
+                row.put("period", period);
+                row.put("totalCharge", BigDecimal.ZERO);
+                row.put("totalWorkHours", 0L);
+                row.put("totalTreat", 0L);
+            }
+            result.add(row);
+        }
+        return result;
     }
 
     private static Map<String, Map<String, Object>> toMapByPeriod(List<Map<String, Object>> list) {

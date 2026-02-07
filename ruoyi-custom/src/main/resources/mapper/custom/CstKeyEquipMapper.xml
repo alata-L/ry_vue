@@ -88,4 +88,16 @@
         from cst_key_equip where status = '0'
         group by use_dept order by use_dept
     </select>
+
+    <!-- 重点设备统计：按价格范围统计（≥50万） -->
+    <select id="selectSummaryByValue50" resultType="map">
+        select count(*) as equipCount, ifnull(sum(total_value), 0) as totalValue
+        from cst_key_equip where status = '0' and total_value >= 500000
+    </select>
+
+    <!-- 重点设备统计：按价格范围统计（≥100万） -->
+    <select id="selectSummaryByValue100" resultType="map">
+        select count(*) as equipCount, ifnull(sum(total_value), 0) as totalValue
+        from cst_key_equip where status = '0' and total_value >= 1000000
+    </select>
 </mapper>
