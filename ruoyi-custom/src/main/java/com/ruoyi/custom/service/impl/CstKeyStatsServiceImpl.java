@@ -178,6 +178,15 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
         List<Map<String, Object>> result = new ArrayList<>();
         for (Map<String, Object> row : list) {
             Map<String, Object> out = new HashMap<>(row);
+            // 保留reportDate和weekWorkDays字段（如果存在）
+            Object reportDate = row.get("reportDate");
+            if (reportDate != null) {
+                out.put("reportDate", reportDate);
+            }
+            Object weekWorkDays = row.get("weekWorkDays");
+            if (weekWorkDays != null) {
+                out.put("weekWorkDays", weekWorkDays);
+            }
             Object tc = row.get("totalCharge");
             Object treat = row.get("treatCount");
             BigDecimal totalCharge = tc != null ? toBigDecimal(tc) : BigDecimal.ZERO;

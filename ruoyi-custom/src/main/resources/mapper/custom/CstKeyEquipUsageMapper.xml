@@ -117,7 +117,11 @@
     <select id="selectSeriesByEquip" resultType="map">
         select
         <choose>
-            <when test="groupBy == 'week'">date_format(report_date, '%Y-%u') as period,</when>
+            <when test="groupBy == 'week'">
+                date_format(report_date, '%Y-%u') as period,
+                min(report_date) as reportDate,
+                max(week_work_days) as weekWorkDays,
+            </when>
             <when test="groupBy == 'month'">date_format(report_date, '%Y-%m') as period,</when>
             <when test="groupBy == 'year'">date_format(report_date, '%Y') as period,</when>
             <otherwise>report_date as period,</otherwise>
