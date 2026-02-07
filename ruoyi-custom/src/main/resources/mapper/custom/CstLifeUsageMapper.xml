@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.custom.mapper.CstLifeUsageMapper">
+
+    <resultMap type="com.ruoyi.custom.domain.CstLifeUsage" id="CstLifeUsageResult">
+        <id     property="id"         column="id"         />
+        <result property="statDate"   column="stat_date"  />
+        <result property="equipType" column="equip_type" />
+        <result property="useDept"   column="use_dept"   />
+        <result property="usedCount" column="used_count"/>
+        <result property="createBy"   column="create_by" />
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy"   column="update_by" />
+        <result property="updateTime" column="update_time"/>
+        <result property="remark"     column="remark"    />
+    </resultMap>
+
+    <sql id="selectCstLifeUsageVo">
+        select id, stat_date, equip_type, use_dept, used_count, create_by, create_time, update_by, update_time, remark from cst_life_usage
+    </sql>
+
+    <select id="selectCstLifeUsageList" parameterType="com.ruoyi.custom.domain.CstLifeUsage" resultMap="CstLifeUsageResult">
+        <include refid="selectCstLifeUsageVo"/>
+        <where>
+            <if test="params != null and params.beginTime != null and params.beginTime != ''"> and stat_date &gt;= #{params.beginTime}</if>
+            <if test="params != null and params.endTime != null and params.endTime != ''"> and stat_date &lt;= #{params.endTime}</if>
+            <if test="equipType != null and equipType != ''"> and equip_type = #{equipType}</if>
+            <if test="useDept != null and useDept != ''"> and use_dept = #{useDept}</if>
+        </where>
+        order by stat_date desc, equip_type, use_dept
+    </select>
+
+    <select id="selectCstLifeUsageById" parameterType="Long" resultMap="CstLifeUsageResult">
+        <include refid="selectCstLifeUsageVo"/> where id = #{id}
+    </select>
+
+    <select id="selectCstLifeUsageByUnique" resultMap="CstLifeUsageResult">
+        <include refid="selectCstLifeUsageVo"/>
+        where stat_date = #{statDate} and equip_type = #{equipType} and use_dept = #{useDept} limit 1
+    </select>
+
+    <insert id="insertCstLifeUsage" parameterType="com.ruoyi.custom.domain.CstLifeUsage" useGeneratedKeys="true" keyProperty="id">
+        insert into cst_life_usage (stat_date, equip_type, use_dept, used_count, create_by, create_time, remark)
+        values (#{statDate}, #{equipType}, #{useDept}, #{usedCount}, #{createBy}, sysdate(), #{remark})
+    </insert>
+
+    <update id="updateCstLifeUsage" parameterType="com.ruoyi.custom.domain.CstLifeUsage">
+        update cst_life_usage
+        <set>
+            <if test="usedCount != null">used_count = #{usedCount},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate(),
+            <if test="remark != null">remark = #{remark},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCstLifeUsageById" parameterType="Long">
+        delete from cst_life_usage where id = #{id}
+    </delete>
+
+    <delete id="deleteCstLifeUsageByIds" parameterType="Long">
+        delete from cst_life_usage where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <select id="sumUsageByRange" parameterType="map" resultType="map">
+        select
+        <choose>
+            <when test="groupBy == 'month'">date_format(stat_date,'%Y-%m') as statPeriod,</when>
+            <when test="groupBy == 'year'">date_format(stat_date,'%Y') as statPeriod,</when>
+            <otherwise>stat_date as statPeriod,</otherwise>
+        </choose>
+        equip_type as equipType, use_dept as useDept, sum(used_count) as totalCount
+        from cst_life_usage
+        <where>
+            <if test="beginTime != null and beginTime != ''"> and stat_date &gt;= #{beginTime}</if>
+            <if test="endTime != null and endTime != ''"> and stat_date &lt;= #{endTime}</if>
+            <if test="equipType != null and equipType != ''"> and equip_type = #{equipType}</if>
+            <if test="useDept != null and useDept != ''"> and use_dept = #{useDept}</if>
+        </where>
+        group by
+        <choose>
+            <when test="groupBy == 'month'">date_format(stat_date,'%Y-%m'),</when>
+            <when test="groupBy == 'year'">date_format(stat_date,'%Y'),</when>
+            <otherwise>stat_date,</otherwise>
+        </choose>
+        equip_type, use_dept order by statPeriod, equip_type, use_dept
+    </select>
+
+    <!-- 生命支持类统计：指定日期范围内按月份+设备类型汇总，返回 statPeriod(yyyy-MM)/equipType/totalCount -->
+    <select id="sumUsageByMonthAndType" resultType="map">
+        select date_format(stat_date, '%Y-%m') as statPeriod,
+               equip_type as equipType,
+               ifnull(sum(used_count), 0) as totalCount
+        from cst_life_usage
+        where stat_date &gt;= #{start} and stat_date &lt;= #{end}
+        group by date_format(stat_date, '%Y-%m'), equip_type
+        order by statPeriod, equip_type
+    </select>
+
+    <!-- 生命支持类统计：指定日期范围内按科室汇总，返回 useDept/totalCount -->
+    <select id="sumUsageByDeptInRange" resultType="map">
+        select use_dept as useDept, ifnull(sum(used_count), 0) as totalCount
+        from cst_life_usage
+        where stat_date &gt;= #{start} and stat_date &lt;= #{end}
+        group by use_dept
+        order by totalCount desc
+    </select>
+</mapper>

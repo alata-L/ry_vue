@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.custom.mapper.CstKeyEquipMapper">
+
+    <resultMap type="com.ruoyi.custom.domain.CstKeyEquip" id="CstKeyEquipResult">
+        <id     property="id"          column="id"           />
+        <result property="equipNo"     column="equip_no"     />
+        <result property="subAssetNo"  column="sub_asset_no" />
+        <result property="equipDesc"   column="equip_desc"   />
+        <result property="model"       column="model"        />
+        <result property="totalValue"  column="total_value"  />
+        <result property="capDate"     column="cap_date"     />
+        <result property="useDept"     column="use_dept"    />
+        <result property="status"      column="status"      />
+        <result property="createBy"    column="create_by"   />
+        <result property="createTime"  column="create_time" />
+        <result property="updateBy"    column="update_by"   />
+        <result property="updateTime"  column="update_time" />
+        <result property="remark"      column="remark"      />
+    </resultMap>
+
+    <sql id="selectCstKeyEquipVo">
+        select id, equip_no, sub_asset_no, equip_desc, model, total_value, cap_date, use_dept, status,
+               create_by, create_time, update_by, update_time, remark from cst_key_equip
+    </sql>
+
+    <select id="selectCstKeyEquipList" parameterType="com.ruoyi.custom.domain.CstKeyEquip" resultMap="CstKeyEquipResult">
+        <include refid="selectCstKeyEquipVo"/>
+        <where>
+            <if test="id != null"> and id = #{id}</if>
+            <if test="equipNo != null and equipNo != ''"> and equip_no like concat('%', #{equipNo}, '%')</if>
+            <if test="useDept != null and useDept != ''"> and use_dept = #{useDept}</if>
+            <if test="equipDesc != null and equipDesc != ''"> and equip_desc like concat('%', #{equipDesc}, '%')</if>
+            <if test="status != null and status != ''"> and status = #{status}</if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectCstKeyEquipById" parameterType="Long" resultMap="CstKeyEquipResult">
+        <include refid="selectCstKeyEquipVo"/> where id = #{id}
+    </select>
+
+    <insert id="insertCstKeyEquip" parameterType="com.ruoyi.custom.domain.CstKeyEquip" useGeneratedKeys="true" keyProperty="id">
+        insert into cst_key_equip (equip_no, sub_asset_no, equip_desc, model, total_value, cap_date, use_dept, status, create_by, create_time, remark)
+        values (#{equipNo}, #{subAssetNo}, #{equipDesc}, #{model}, #{totalValue}, #{capDate}, #{useDept}, #{status}, #{createBy}, sysdate(), #{remark})
+    </insert>
+
+    <update id="updateCstKeyEquip" parameterType="com.ruoyi.custom.domain.CstKeyEquip">
+        update cst_key_equip
+        <set>
+            <if test="equipNo != null and equipNo != ''">equip_no = #{equipNo},</if>
+            <if test="subAssetNo != null">sub_asset_no = #{subAssetNo},</if>
+            <if test="equipDesc != null">equip_desc = #{equipDesc},</if>
+            <if test="model != null">model = #{model},</if>
+            <if test="totalValue != null">total_value = #{totalValue},</if>
+            <if test="capDate != null">cap_date = #{capDate},</if>
+            <if test="useDept != null">use_dept = #{useDept},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate(),
+            <if test="remark != null">remark = #{remark},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCstKeyEquipById" parameterType="Long">
+        delete from cst_key_equip where id = #{id}
+    </delete>
+
+    <delete id="deleteCstKeyEquipByIds" parameterType="Long">
+        delete from cst_key_equip where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- 重点设备统计：全院汇总 -->
+    <select id="selectSummary" resultType="map">
+        select count(*) as equipCount, ifnull(sum(total_value), 0) as totalValue
+        from cst_key_equip where status = '0'
+    </select>
+
+    <!-- 重点设备统计：按科室汇总设备数与价值 -->
+    <select id="selectDeptEquipStats" resultType="map">
+        select use_dept as useDept, count(*) as equipCount, ifnull(sum(total_value), 0) as totalValue
+        from cst_key_equip where status = '0'
+        group by use_dept order by use_dept
+    </select>
+</mapper>

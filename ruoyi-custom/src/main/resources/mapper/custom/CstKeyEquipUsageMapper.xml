@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.custom.mapper.CstKeyEquipUsageMapper">
+
+    <resultMap type="com.ruoyi.custom.domain.CstKeyEquipUsage" id="CstKeyEquipUsageResult">
+        <id     property="id"             column="id"              />
+        <result property="equipId"        column="equip_id"         />
+        <result property="reportDate"     column="report_date"      />
+        <result property="treatCount"     column="treat_count"      />
+        <result property="workHours"      column="work_hours"      />
+        <result property="unitChargePrice" column="unit_charge_price" />
+        <result property="createBy"       column="create_by"      />
+        <result property="createTime"     column="create_time"     />
+        <result property="updateBy"       column="update_by"       />
+        <result property="updateTime"     column="update_time"     />
+        <result property="remark"         column="remark"         />
+        <result property="equipNo"        column="equip_no"        />
+        <result property="equipDesc"      column="equip_desc"      />
+        <result property="useDept"        column="use_dept"        />
+    </resultMap>
+
+    <sql id="selectCstKeyEquipUsageVo">
+        select u.id, u.equip_id, u.report_date, u.treat_count, u.work_hours, u.unit_charge_price, u.create_by, u.create_time, u.update_by, u.update_time, u.remark,
+               e.equip_no, e.equip_desc, e.use_dept from cst_key_equip_usage u left join cst_key_equip e on u.equip_id = e.id
+    </sql>
+
+    <select id="selectCstKeyEquipUsageList" parameterType="com.ruoyi.custom.domain.CstKeyEquipUsage" resultMap="CstKeyEquipUsageResult">
+        <include refid="selectCstKeyEquipUsageVo"/>
+        <where>
+            <if test="equipId != null"> and u.equip_id = #{equipId}</if>
+            <if test="reportDate != null and reportDate != ''"> and u.report_date = #{reportDate}</if>
+            <if test="equipDesc != null and equipDesc != ''"> and e.equip_desc like concat('%', #{equipDesc}, '%')</if>
+            <if test="useDept != null and useDept != ''"> and e.use_dept = #{useDept}</if>
+        </where>
+        order by u.report_date desc, u.equip_id
+    </select>
+
+    <select id="selectCstKeyEquipUsageById" parameterType="Long" resultMap="CstKeyEquipUsageResult">
+        <include refid="selectCstKeyEquipUsageVo"/> where u.id = #{id}
+    </select>
+
+    <select id="selectByEquipIdAndReportDate" resultMap="CstKeyEquipUsageResult">
+        select id, equip_id, report_date, treat_count, work_hours, unit_charge_price, create_by, create_time, update_by, update_time, remark
+        from cst_key_equip_usage where equip_id = #{equipId} and report_date = #{reportDate} limit 1
+    </select>
+
+    <insert id="insertCstKeyEquipUsage" parameterType="com.ruoyi.custom.domain.CstKeyEquipUsage" useGeneratedKeys="true" keyProperty="id">
+        insert into cst_key_equip_usage (equip_id, report_date, treat_count, work_hours, unit_charge_price, create_by, create_time, remark)
+        values (#{equipId}, #{reportDate}, #{treatCount}, #{workHours}, #{unitChargePrice}, #{createBy}, sysdate(), #{remark})
+    </insert>
+
+    <update id="updateCstKeyEquipUsage" parameterType="com.ruoyi.custom.domain.CstKeyEquipUsage">
+        update cst_key_equip_usage
+        <set>
+            <if test="treatCount != null">treat_count = #{treatCount},</if>
+            <if test="workHours != null">work_hours = #{workHours},</if>
+            <if test="unitChargePrice != null">unit_charge_price = #{unitChargePrice},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate(),
+            <if test="remark != null">remark = #{remark},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCstKeyEquipUsageById" parameterType="Long">
+        delete from cst_key_equip_usage where id = #{id}
+    </delete>
+
+    <delete id="deleteCstKeyEquipUsageByIds" parameterType="Long">
+        delete from cst_key_equip_usage where id in
+        <foreach collection="array" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- 重点设备统计：指定日期范围内全院收费与诊治例数汇总（收费=sum(treat_count*unit_charge_price)） -->
+    <select id="sumChargeAndTreatInRange" resultType="map">
+        select ifnull(sum(ifnull(treat_count,0) * ifnull(unit_charge_price,0)), 0) as totalCharge,
+               ifnull(sum(ifnull(treat_count,0)), 0) as totalTreat
+        from cst_key_equip_usage
+        where report_date &gt;= #{start} and report_date &lt;= #{end}
+    </select>
+
+    <!-- 重点设备统计：指定日期范围内按科室汇总收费与诊治例数 -->
+    <select id="sumChargeAndTreatByDeptInRange" resultType="map">
+        select e.use_dept as useDept,
+               ifnull(sum(u.treat_count * u.unit_charge_price), 0) as totalCharge,
+               ifnull(sum(u.treat_count), 0) as totalTreat
+        from cst_key_equip_usage u
+        join cst_key_equip e on u.equip_id = e.id
+        where u.report_date &gt;= #{start} and u.report_date &lt;= #{end}
+        group by e.use_dept order by e.use_dept
+    </select>
+
+    <!-- 重点设备统计：指定日期范围内按设备汇总收费与诊治例数 -->
+    <select id="sumChargeAndTreatByEquipInRange" resultType="map">
+        select u.equip_id as equipId,
+               ifnull(sum(u.treat_count * u.unit_charge_price), 0) as totalCharge,
+               ifnull(sum(u.treat_count), 0) as totalTreat
+        from cst_key_equip_usage u
+        where u.report_date &gt;= #{start} and u.report_date &lt;= #{end}
+        group by u.equip_id
+    </select>
+
+    <!-- 重点设备统计：指定科室、日期范围内按设备汇总收费与诊治例数 -->
+    <select id="sumChargeAndTreatByEquipInRangeAndDept" resultType="map">
+        select u.equip_id as equipId,
+               ifnull(sum(u.treat_count * u.unit_charge_price), 0) as totalCharge,
+               ifnull(sum(u.treat_count), 0) as totalTreat
+        from cst_key_equip_usage u
+        join cst_key_equip e on u.equip_id = e.id and e.use_dept = #{useDept}
+        where u.report_date &gt;= #{start} and u.report_date &lt;= #{end}
+        group by u.equip_id
+    </select>
+
+    <!-- 重点设备统计：单设备按时段聚合，groupBy=day|week|month|year -->
+    <select id="selectSeriesByEquip" resultType="map">
+        select
+        <choose>
+            <when test="groupBy == 'week'">date_format(report_date, '%Y-%u') as period,</when>
+            <when test="groupBy == 'month'">date_format(report_date, '%Y-%m') as period,</when>
+            <when test="groupBy == 'year'">date_format(report_date, '%Y') as period,</when>
+            <otherwise>report_date as period,</otherwise>
+        </choose>
+        ifnull(sum(work_hours), 0) as workHours,
+        ifnull(sum(treat_count), 0) as treatCount,
+        ifnull(sum(treat_count * unit_charge_price), 0) as totalCharge
+        from cst_key_equip_usage
+        where equip_id = #{equipId}
+        <if test="start != null and start != ''"> and report_date &gt;= #{start}</if>
+        <if test="end != null and end != ''"> and report_date &lt;= #{end}</if>
+        group by
+        <choose>
+            <when test="groupBy == 'week'">date_format(report_date, '%Y-%u')</when>
+            <when test="groupBy == 'month'">date_format(report_date, '%Y-%m')</when>
+            <when test="groupBy == 'year'">date_format(report_date, '%Y')</when>
+            <otherwise>report_date</otherwise>
+        </choose>
+        order by period
+    </select>
+
+    <!-- 重点设备统计：指定日期范围内全院按月汇总，返回 period(yyyy-MM)/totalCharge/totalTreat -->
+    <select id="sumChargeAndTreatByMonthInRange" resultType="map">
+        select date_format(report_date, '%Y-%m') as period,
+               ifnull(sum(ifnull(treat_count,0) * ifnull(unit_charge_price,0)), 0) as totalCharge,
+               ifnull(sum(ifnull(treat_count,0)), 0) as totalTreat
+        from cst_key_equip_usage
+        where report_date &gt;= #{start} and report_date &lt;= #{end}
+        group by date_format(report_date, '%Y-%m')
+        order by period
+    </select>
+
+    <!-- 重点设备统计：指定日期范围内按设备汇总收费，按 totalCharge 降序取前 limit 条 -->
+    <select id="topEquipByChargeInRange" resultType="map">
+        select e.id as equipId, e.equip_no as equipNo, e.equip_desc as equipDesc, e.use_dept as useDept,
+               ifnull(sum(u.treat_count * u.unit_charge_price), 0) as totalCharge,
+               ifnull(sum(u.treat_count), 0) as totalTreat
+        from cst_key_equip_usage u
+        join cst_key_equip e on u.equip_id = e.id
+        where u.report_date &gt;= #{start} and u.report_date &lt;= #{end}
+        group by u.equip_id, e.id, e.equip_no, e.equip_desc, e.use_dept
+        order by totalCharge desc
+        limit #{limit}
+    </select>
+</mapper>
