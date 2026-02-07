@@ -65,12 +65,20 @@ export const constantRoutes = [
     path: '',
     component: Layout,
     redirect: 'index',
+    alwaysShow: true,
+    meta: { title: '首页', icon: 'dashboard' },
     children: [
       {
         path: 'index',
         component: () => import('@/views/index'),
         name: 'Index',
-        meta: { title: '首页', icon: 'dashboard', affix: true }
+        meta: { title: '首页-全院重点设备装备情况', icon: 'dashboard' }
+      },
+      {
+        path: 'index2',
+        component: () => import('@/views/index2'),
+        name: 'Index2',
+        meta: { title: '首页2-全院生命支持类设备装备使用情况', icon: 'dashboard' }
       }
     ]
   },
