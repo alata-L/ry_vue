@@ -61,6 +61,11 @@ public class CstLifeEquipServiceImpl implements ICstLifeEquipService {
     }
 
     @Override
+    public List<Map<String, Object>> countByYearsAndDeptAndType(int minYears) {
+        return cstLifeEquipMapper.countByYearsAndDeptAndType(minYears);
+    }
+
+    @Override
     public String importLifeEquip(List<CstLifeEquip> lifeEquipList, Boolean isUpdateSupport, String operName) {
         if (StringUtils.isNull(lifeEquipList) || lifeEquipList.size() == 0) {
             throw new ServiceException("导入设备数据不能为空！");

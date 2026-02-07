@@ -110,6 +110,14 @@ public class CstLifeEquipController extends BaseController {
         return success(cstLifeEquipService.countByYearsAndDept(minYears));
     }
 
+    /** 按使用年限和设备类型统计：minYears=6/10/15 */
+    @PreAuthorize("@ss.hasPermi('custom:lifeEquip:list')")
+    @GetMapping("/stats/yearsByType")
+    public AjaxResult statsYearsByType(Integer minYears) {
+        if (minYears == null) minYears = 6;
+        return success(cstLifeEquipService.countByYearsAndDeptAndType(minYears));
+    }
+
     @Log(title = "通用设备", businessType = BusinessType.IMPORT)
     @PreAuthorize("@ss.hasPermi('custom:lifeEquip:import')")
     @PostMapping("/importData")

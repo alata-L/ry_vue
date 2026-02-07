@@ -23,6 +23,9 @@ public interface CstLifeEquipMapper {
     /** 按使用年限统计设备数（全院/科室） */
     List<Map<String, Object>> countByYearsAndDept(int minYears);
 
+    /** 按使用年限和设备类型统计设备数（全院/科室） */
+    List<Map<String, Object>> countByYearsAndDeptAndType(int minYears);
+
     int insertCstLifeEquip(CstLifeEquip row);
 
     int updateCstLifeEquip(CstLifeEquip row);

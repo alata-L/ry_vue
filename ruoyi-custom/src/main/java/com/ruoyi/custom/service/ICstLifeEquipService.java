@@ -27,6 +27,9 @@ public interface ICstLifeEquipService {
     /** 按使用年限统计（minYears=6/10/15） */
     List<Map<String, Object>> countByYearsAndDept(int minYears);
 
+    /** 按使用年限和设备类型统计（minYears=6/10/15） */
+    List<Map<String, Object>> countByYearsAndDeptAndType(int minYears);
+
     /** 导入通用设备数据 */
     String importLifeEquip(List<CstLifeEquip> lifeEquipList, Boolean isUpdateSupport, String operName);
 }

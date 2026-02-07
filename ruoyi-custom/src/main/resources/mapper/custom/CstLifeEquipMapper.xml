@@ -88,4 +88,10 @@
         where status = '0' and cap_date is not null and datediff(curdate(), cap_date) / 365.25 &gt;= #{minYears}
         group by use_dept order by cnt desc
     </select>
+
+    <select id="countByYearsAndDeptAndType" resultType="map">
+        select use_dept as useDept, equip_type as equipType, count(*) as cnt from cst_life_equip
+        where status = '0' and cap_date is not null and datediff(curdate(), cap_date) / 365.25 &gt;= #{minYears}
+        group by use_dept, equip_type order by use_dept, equip_type
+    </select>
 </mapper>

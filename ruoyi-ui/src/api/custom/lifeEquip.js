@@ -69,6 +69,14 @@ export function statsYears(minYears) {
   })
 }
 
+export function statsYearsByType(minYears) {
+  return request({
+    url: '/custom/lifeEquip/stats/yearsByType',
+    method: 'get',
+    params: { minYears }
+  })
+}
+
 export function importTemplate() {
   return request({
     url: '/custom/lifeEquip/importTemplate',
