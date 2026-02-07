@@ -37,31 +37,65 @@
           </el-col>
         </el-row>
       </div>
-      <!-- 设备使用数据：三个表格 -->
+      <!-- 设备使用数据：标签页展示 -->
       <div class="stats-section usage-section">
         <h3 class="section-title">设备使用数据</h3>
+        <el-tabs v-model="activeTab">
+          <el-tab-pane label="监护仪" name="1">
+            <h4 class="table-title">最近一年的每月使用情况</h4>
+            <el-table :data="getUsageByType(usageMonthly, '1')" border size="small" class="usage-table">
+              <el-table-column label="月份" prop="statPeriod" min-width="120" />
+              <el-table-column label="使用台数" prop="totalCount" width="120" align="right" />
+            </el-table>
 
-        <h4 class="table-title">最近一月的每日使用情况</h4>
-        <el-table :data="usageDaily" border size="small" class="usage-table">
-          <el-table-column label="日期" prop="statPeriod" min-width="120" />
-          <el-table-column label="设备类型" prop="equipType" width="100">
-            <template slot-scope="scope">
-              {{ equipTypeLabel(scope.row.equipType) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="使用台数" prop="totalCount" width="120" align="right" />
-        </el-table>
+            <div class="table-header">
+              <h4 class="table-title">每日使用情况</h4>
+              <el-select v-model="selectedMonth" placeholder="选择月份" size="small" style="width:160px" @change="handleMonthChange">
+                <el-option v-for="month in availableMonths" :key="month.value" :label="month.label" :value="month.value"></el-option>
+              </el-select>
+            </div>
+            <el-table :data="getUsageByType(usageDaily, '1')" border size="small" class="usage-table">
+              <el-table-column label="日期" prop="statPeriod" min-width="120" />
+              <el-table-column label="使用台数" prop="totalCount" width="120" align="right" />
+            </el-table>
+          </el-tab-pane>
+          <el-tab-pane label="输液泵" name="2">
+            <h4 class="table-title">最近一年的每月使用情况</h4>
+            <el-table :data="getUsageByType(usageMonthly, '2')" border size="small" class="usage-table">
+              <el-table-column label="月份" prop="statPeriod" min-width="120" />
+              <el-table-column label="使用台数" prop="totalCount" width="120" align="right" />
+            </el-table>
 
-        <h4 class="table-title">最近一年的每月使用情况</h4>
-        <el-table :data="usageMonthly" border size="small" class="usage-table">
-          <el-table-column label="月份" prop="statPeriod" min-width="120" />
-          <el-table-column label="设备类型" prop="equipType" width="100">
-            <template slot-scope="scope">
-              {{ equipTypeLabel(scope.row.equipType) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="使用台数" prop="totalCount" width="120" align="right" />
-        </el-table>
+            <div class="table-header">
+              <h4 class="table-title">每日使用情况</h4>
+              <el-select v-model="selectedMonth" placeholder="选择月份" size="small" style="width:160px" @change="handleMonthChange">
+                <el-option v-for="month in availableMonths" :key="month.value" :label="month.label" :value="month.value"></el-option>
+              </el-select>
+            </div>
+            <el-table :data="getUsageByType(usageDaily, '2')" border size="small" class="usage-table">
+              <el-table-column label="日期" prop="statPeriod" min-width="120" />
+              <el-table-column label="使用台数" prop="totalCount" width="120" align="right" />
+            </el-table>
+          </el-tab-pane>
+          <el-tab-pane label="注射泵" name="3">
+            <h4 class="table-title">最近一年的每月使用情况</h4>
+            <el-table :data="getUsageByType(usageMonthly, '3')" border size="small" class="usage-table">
+              <el-table-column label="月份" prop="statPeriod" min-width="120" />
+              <el-table-column label="使用台数" prop="totalCount" width="120" align="right" />
+            </el-table>
+
+            <div class="table-header">
+              <h4 class="table-title">每日使用情况</h4>
+              <el-select v-model="selectedMonth" placeholder="选择月份" size="small" style="width:160px" @change="handleMonthChange">
+                <el-option v-for="month in availableMonths" :key="month.value" :label="month.label" :value="month.value"></el-option>
+              </el-select>
+            </div>
+            <el-table :data="getUsageByType(usageDaily, '3')" border size="small" class="usage-table">
+              <el-table-column label="日期" prop="statPeriod" min-width="120" />
+              <el-table-column label="使用台数" prop="totalCount" width="120" align="right" />
+            </el-table>
+          </el-tab-pane>
+        </el-tabs>
       </div>
     </template>
   </div>
@@ -77,19 +111,53 @@ function dateStr(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
 }
 
+function monthStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+}
+
 export default {
   name: 'LifeStatsDeptDetail',
   data() {
+    // 默认选择当前月份
+    const now = new Date()
     return {
+      activeTab: '1',
       useDept: '',
       summary: { monitor: 0, infusionPump: 0, syringePump: 0, total: 0 },
       usageDaily: [],
-      usageMonthly: []
+      usageMonthly: [],
+      selectedMonth: monthStr(now) // 默认当前月份
     }
   },
   computed: {
     pageTitle() {
       return this.useDept ? `${this.useDept} - 通用设备统计` : '科室设备统计'
+    },
+    // 计算最近12个月的范围（从当前月份往前推11个月，包含当前月）
+    monthRange() {
+      const now = new Date()
+      const endMonth = new Date(now.getFullYear(), now.getMonth(), 1) // 当前月份第一天
+      const startMonth = new Date(now.getFullYear(), now.getMonth() - 11, 1) // 往前推11个月
+      return {
+        start: monthStr(startMonth),
+        end: monthStr(endMonth)
+      }
+    },
+    // 生成最近12个月的选项列表（从最早到最新）
+    availableMonths() {
+      const months = []
+      const now = new Date()
+      // 从当前月份往前推11个月，包含当前月，共12个月
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        const value = monthStr(date)
+        const year = date.getFullYear()
+        const month = date.getMonth() + 1
+        const monthNames = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二']
+        const label = `${year}年${monthNames[month - 1]}月`
+        months.push({ value, label })
+      }
+      return months
     }
   },
   watch: {
@@ -98,6 +166,10 @@ export default {
       handler(val) {
         this.useDept = val || ''
         if (this.useDept) {
+          // 确保选中的月份在有效范围内
+          if (this.selectedMonth && (this.selectedMonth < this.monthRange.start || this.selectedMonth > this.monthRange.end)) {
+            this.selectedMonth = this.monthRange.end
+          }
           this.loadDeptSummary()
           this.loadUsageAll()
         }
@@ -110,6 +182,10 @@ export default {
     },
     equipTypeLabel(type) {
       return EQUIP_TYPE_MAP[String(type)] || type || '-'
+    },
+    // 按设备类型过滤使用数据
+    getUsageByType(list, equipType) {
+      return (list || []).filter(item => String(item.equipType) === String(equipType))
     },
     loadDeptSummary() {
       statsDeptType().then(res => {
@@ -126,26 +202,40 @@ export default {
       })
     },
     loadUsageAll() {
-      const end = new Date()
-      const endTime = dateStr(end)
+      // 加载指定月份的每日数据
+      this.loadDailyUsage()
 
-      const startMonth = new Date()
-      startMonth.setMonth(startMonth.getMonth() - 1)
+      // 加载最近12个月的每月数据（从当前月份往前推11个月，包含当前月）
+      const now = new Date()
+      const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0) // 当前月份最后一天
+      const startDate = new Date(now.getFullYear(), now.getMonth() - 11, 1) // 往前推11个月的第一天
+      
       sumLifeUsage({
         useDept: this.useDept,
-        beginTime: dateStr(startMonth),
-        endTime,
-        groupBy: 'day'
-      }).then(res => { this.usageDaily = res.data || [] })
-
-      const startYear = new Date()
-      startYear.setFullYear(startYear.getFullYear() - 1)
-      sumLifeUsage({
-        useDept: this.useDept,
-        beginTime: dateStr(startYear),
-        endTime,
+        beginTime: dateStr(startDate),
+        endTime: dateStr(endDate),
         groupBy: 'month'
       }).then(res => { this.usageMonthly = res.data || [] })
+    },
+    // 加载指定月份的每日使用数据
+    loadDailyUsage() {
+      if (!this.selectedMonth || !this.useDept) return
+      
+      // 解析选中的月份，计算该月的开始和结束日期
+      const [year, month] = this.selectedMonth.split('-').map(Number)
+      const startDate = new Date(year, month - 1, 1)
+      const endDate = new Date(year, month, 0) // 该月最后一天
+      
+      sumLifeUsage({
+        useDept: this.useDept,
+        beginTime: dateStr(startDate),
+        endTime: dateStr(endDate),
+        groupBy: 'day'
+      }).then(res => { this.usageDaily = res.data || [] })
+    },
+    // 处理月份变化
+    handleMonthChange() {
+      this.loadDailyUsage()
     }
   }
 }
@@ -201,6 +291,16 @@ export default {
 }
 .table-title:first-of-type {
   margin-top: 0;
+}
+.table-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin: 24px 0 12px 0;
+  gap: 12px;
+}
+.table-header .table-title {
+  margin: 0;
 }
 .usage-table {
   margin-bottom: 8px;
