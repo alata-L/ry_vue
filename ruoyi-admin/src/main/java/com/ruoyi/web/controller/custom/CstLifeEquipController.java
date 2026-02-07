@@ -47,6 +47,7 @@ public class CstLifeEquipController extends BaseController {
     public void export(HttpServletResponse response, CstLifeEquip row) {
         List<CstLifeEquip> list = cstLifeEquipService.selectCstLifeEquipList(row);
         ExcelUtil<CstLifeEquip> util = new ExcelUtil<>(CstLifeEquip.class);
+        util.hideColumn("subAssetNo");
         util.exportExcel(response, list, "通用设备数据");
     }
 
@@ -61,6 +62,7 @@ public class CstLifeEquipController extends BaseController {
         List<CstLifeEquip> list = cstLifeEquipService.selectCstLifeEquipList(row);
         String title = "1".equals(equipType) ? "监护仪" : "2".equals(equipType) ? "输液泵" : "3".equals(equipType) ? "注射泵" : "通用设备";
         ExcelUtil<CstLifeEquip> util = new ExcelUtil<>(CstLifeEquip.class);
+        util.hideColumn("subAssetNo");
         util.exportExcel(response, list, title);
     }
 

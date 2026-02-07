@@ -21,7 +21,6 @@ public class CstLifeEquip extends BaseEntity {
     @Excel(name = "设备编号")
     private String equipNo;
     /** 子资产编号 */
-    @Excel(name = "子资产编号")
     private String subAssetNo;
     /** 设备描述 */
     @Excel(name = "设备描述")
