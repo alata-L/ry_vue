@@ -161,6 +161,12 @@ export default {
     },
     handleAdd() {
       this.reset()
+      // 设置上报日期默认为当天
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = String(today.getMonth() + 1).padStart(2, '0')
+      const day = String(today.getDate()).padStart(2, '0')
+      this.form.reportDate = `${year}-${month}-${day}`
       this.open = true
       this.title = '新增使用统计'
     },
