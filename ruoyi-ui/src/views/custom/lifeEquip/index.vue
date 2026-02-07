@@ -44,7 +44,6 @@
     <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="设备编号" align="center" prop="equipNo" min-width="100" />
-      <el-table-column label="子资产编号" align="center" prop="subAssetNo" min-width="100" />
       <el-table-column label="设备描述" align="center" prop="equipDesc" min-width="120" show-overflow-tooltip />
       <el-table-column label="型号" align="center" prop="model" min-width="100" />
       <el-table-column label="累计购置价值" align="center" prop="totalValue" width="110" />
@@ -85,11 +84,6 @@
           <el-col :span="12">
             <el-form-item label="设备编号" prop="equipNo">
               <el-input v-model="form.equipNo" placeholder="请输入设备编号" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="子资产编号" prop="subAssetNo">
-              <el-input v-model="form.subAssetNo" placeholder="请输入子资产编号" />
             </el-form-item>
           </el-col>
         </el-row>
