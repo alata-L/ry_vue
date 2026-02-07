@@ -41,6 +41,10 @@
         <include refid="selectCstLifeEquipVo"/> where id = #{id}
     </select>
 
+    <select id="selectCstLifeEquipByEquipNo" parameterType="String" resultMap="CstLifeEquipResult">
+        <include refid="selectCstLifeEquipVo"/> where equip_no = #{equipNo} limit 1
+    </select>
+
     <insert id="insertCstLifeEquip" parameterType="com.ruoyi.custom.domain.CstLifeEquip" useGeneratedKeys="true" keyProperty="id">
         insert into cst_life_equip (equip_no, sub_asset_no, equip_desc, model, total_value, cap_date, use_dept, equip_type, status, create_by, create_time, remark)
         values (#{equipNo}, #{subAssetNo}, #{equipDesc}, #{model}, #{totalValue}, #{capDate}, #{useDept}, #{equipType}, #{status}, #{createBy}, sysdate(), #{remark})

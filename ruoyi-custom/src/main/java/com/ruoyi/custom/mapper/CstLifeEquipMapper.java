@@ -15,6 +15,8 @@ public interface CstLifeEquipMapper {
 
     CstLifeEquip selectCstLifeEquipById(Long id);
 
+    CstLifeEquip selectCstLifeEquipByEquipNo(String equipNo);
+
     /** 按科室统计各类型设备台数 */
     List<Map<String, Object>> countByDeptAndType();
 

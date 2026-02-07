@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
@@ -107,5 +108,27 @@ public class CstLifeEquipController extends BaseController {
     public AjaxResult statsYears(Integer minYears) {
         if (minYears == null) minYears = 6;
         return success(cstLifeEquipService.countByYearsAndDept(minYears));
+    }
+
+    @Log(title = "通用设备", businessType = BusinessType.IMPORT)
+    @PreAuthorize("@ss.hasPermi('custom:lifeEquip:import')")
+    @PostMapping("/importData")
+    public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception {
+        if (file == null || file.isEmpty()) {
+            return error("上传文件不能为空");
+        }
+        ExcelUtil<CstLifeEquip> util = new ExcelUtil<>(CstLifeEquip.class);
+        util.hideColumn("subAssetNo");
+        List<CstLifeEquip> lifeEquipList = util.importExcel(file.getInputStream());
+        String operName = getUsername();
+        String message = cstLifeEquipService.importLifeEquip(lifeEquipList, updateSupport, operName);
+        return success(message);
+    }
+
+    @PostMapping("/importTemplate")
+    public void importTemplate(HttpServletResponse response) {
+        ExcelUtil<CstLifeEquip> util = new ExcelUtil<>(CstLifeEquip.class);
+        util.hideColumn("subAssetNo");
+        util.importTemplateExcel(response, "通用设备数据");
     }
 }

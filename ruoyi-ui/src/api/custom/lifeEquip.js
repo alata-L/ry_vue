@@ -68,3 +68,10 @@ export function statsYears(minYears) {
     params: { minYears }
   })
 }
+
+export function importTemplate() {
+  return request({
+    url: '/custom/lifeEquip/importTemplate',
+    method: 'post'
+  })
+}
