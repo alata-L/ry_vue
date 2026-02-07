@@ -62,17 +62,6 @@
           </el-table-column>
           <el-table-column label="使用台数" prop="totalCount" width="120" align="right" />
         </el-table>
-
-        <h4 class="table-title">最近六年的使用情况</h4>
-        <el-table :data="usageYearly" border size="small" class="usage-table">
-          <el-table-column label="年份" prop="statPeriod" min-width="120" />
-          <el-table-column label="设备类型" prop="equipType" width="100">
-            <template slot-scope="scope">
-              {{ equipTypeLabel(scope.row.equipType) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="使用台数" prop="totalCount" width="120" align="right" />
-        </el-table>
       </div>
     </template>
   </div>
@@ -95,8 +84,7 @@ export default {
       useDept: '',
       summary: { monitor: 0, infusionPump: 0, syringePump: 0, total: 0 },
       usageDaily: [],
-      usageMonthly: [],
-      usageYearly: []
+      usageMonthly: []
     }
   },
   computed: {
@@ -158,15 +146,6 @@ export default {
         endTime,
         groupBy: 'month'
       }).then(res => { this.usageMonthly = res.data || [] })
-
-      const startSix = new Date()
-      startSix.setFullYear(startSix.getFullYear() - 6)
-      sumLifeUsage({
-        useDept: this.useDept,
-        beginTime: dateStr(startSix),
-        endTime,
-        groupBy: 'year'
-      }).then(res => { this.usageYearly = res.data || [] })
     }
   }
 }
