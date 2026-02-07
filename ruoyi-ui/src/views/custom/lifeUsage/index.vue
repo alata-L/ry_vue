@@ -147,6 +147,12 @@ export default {
     },
     handleAdd() {
       this.reset()
+      // 设置默认日期为今天
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = String(today.getMonth() + 1).padStart(2, '0')
+      const day = String(today.getDate()).padStart(2, '0')
+      this.form.statDate = `${year}-${month}-${day}`
       this.open = true
       this.title = '新增使用数据'
     },
