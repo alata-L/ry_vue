@@ -40,6 +40,10 @@
         <include refid="selectCstKeyEquipVo"/> where id = #{id}
     </select>
 
+    <select id="selectCstKeyEquipByEquipNo" parameterType="String" resultMap="CstKeyEquipResult">
+        <include refid="selectCstKeyEquipVo"/> where equip_no = #{equipNo} limit 1
+    </select>
+
     <insert id="insertCstKeyEquip" parameterType="com.ruoyi.custom.domain.CstKeyEquip" useGeneratedKeys="true" keyProperty="id">
         insert into cst_key_equip (equip_no, sub_asset_no, equip_desc, model, total_value, cap_date, use_dept, status, create_by, create_time, remark)
         values (#{equipNo}, #{subAssetNo}, #{equipDesc}, #{model}, #{totalValue}, #{capDate}, #{useDept}, #{status}, #{createBy}, sysdate(), #{remark})

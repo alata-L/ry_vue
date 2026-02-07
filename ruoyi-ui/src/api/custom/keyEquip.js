@@ -45,3 +45,10 @@ export function exportKeyEquip(query) {
     params: query
   })
 }
+
+export function importTemplate() {
+  return request({
+    url: '/custom/keyEquip/importTemplate',
+    method: 'post'
+  })
+}

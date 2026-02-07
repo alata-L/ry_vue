@@ -15,6 +15,8 @@ public interface CstKeyEquipMapper {
 
     CstKeyEquip selectCstKeyEquipById(Long id);
 
+    CstKeyEquip selectCstKeyEquipByEquipNo(String equipNo);
+
     int insertCstKeyEquip(CstKeyEquip row);
 
     int updateCstKeyEquip(CstKeyEquip row);

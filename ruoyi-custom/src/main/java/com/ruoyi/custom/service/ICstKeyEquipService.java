@@ -19,4 +19,7 @@ public interface ICstKeyEquipService {
     int updateCstKeyEquip(CstKeyEquip row);
 
     int deleteCstKeyEquipByIds(Long[] ids);
+
+    /** 导入重点设备数据 */
+    String importKeyEquip(List<CstKeyEquip> keyEquipList, Boolean isUpdateSupport, String operName);
 }
