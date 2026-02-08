@@ -29,6 +29,10 @@ public class SysUser extends BaseEntity
     @Excel(name = "部门编号", type = Type.IMPORT)
     private Long deptId;
 
+    /** 所属科室(词典cst_use_dept) */
+    @Excel(name = "所属科室", dictType = "cst_use_dept")
+    private String useDept;
+
     /** 用户账号 */
     @Excel(name = "登录名称")
     private String userName;
@@ -130,6 +134,16 @@ public class SysUser extends BaseEntity
     public void setDeptId(Long deptId)
     {
         this.deptId = deptId;
+    }
+
+    public String getUseDept()
+    {
+        return useDept;
+    }
+
+    public void setUseDept(String useDept)
+    {
+        this.useDept = useDept;
     }
 
     @Xss(message = "用户昵称不能包含脚本字符")
@@ -315,6 +329,7 @@ public class SysUser extends BaseEntity
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
             .append("userId", getUserId())
             .append("deptId", getDeptId())
+            .append("useDept", getUseDept())
             .append("userName", getUserName())
             .append("nickName", getNickName())
             .append("email", getEmail())

@@ -93,6 +93,7 @@
 <script>
 import { listKeyUsage, getKeyUsage, addKeyUsage, updateKeyUsage, delKeyUsage } from '@/api/custom/keyUsage'
 import { listKeyEquip } from '@/api/custom/keyEquip'
+import { getInfo } from '@/api/login'
 
 export default {
   name: 'KeyUsage',
@@ -174,6 +175,13 @@ export default {
       this.form.reportDate = today.getFullYear() + '-' + 
         String(today.getMonth() + 1).padStart(2, '0') + '-' + 
         String(today.getDate()).padStart(2, '0')
+      // 如果当前登录用户有所属科室，自动填充使用科室并加载设备列表
+      getInfo().then(res => {
+        if (res.user && res.user.useDept) {
+          this.form.useDept = res.user.useDept
+          this.onUseDeptChange()
+        }
+      })
       this.open = true
       this.title = '新增使用统计'
     },

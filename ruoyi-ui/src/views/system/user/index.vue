@@ -62,6 +62,11 @@
               <el-table-column label="用户名称" align="center" key="userName" prop="userName" v-if="columns.userName.visible" :show-overflow-tooltip="true" />
               <el-table-column label="用户昵称" align="center" key="nickName" prop="nickName" v-if="columns.nickName.visible" :show-overflow-tooltip="true" />
               <el-table-column label="部门" align="center" key="deptName" prop="dept.deptName" v-if="columns.deptName.visible" :show-overflow-tooltip="true" />
+              <el-table-column label="所属科室" align="center" key="useDept" prop="useDept" v-if="columns.useDept.visible" :show-overflow-tooltip="true">
+                <template slot-scope="scope">
+                  <dict-tag :options="dict.type.cst_use_dept" :value="scope.row.useDept"/>
+                </template>
+              </el-table-column>
               <el-table-column label="手机号码" align="center" key="phonenumber" prop="phonenumber" v-if="columns.phonenumber.visible" width="120" />
               <el-table-column label="状态" align="center" key="status" v-if="columns.status.visible">
                 <template slot-scope="scope">
@@ -106,6 +111,13 @@
           <el-col :span="12">
             <el-form-item label="归属部门" prop="deptId">
               <treeselect v-model="form.deptId" :options="enabledDeptOptions" :show-count="true" placeholder="请选择归属部门" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="所属科室" prop="useDept">
+              <el-select v-model="form.useDept" placeholder="请选择所属科室" clearable filterable allow-create style="width:100%">
+                <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
@@ -210,7 +222,7 @@ import "splitpanes/dist/splitpanes.css"
 
 export default {
   name: "User",
-  dicts: ['sys_normal_disable', 'sys_user_sex'],
+  dicts: ['sys_normal_disable', 'sys_user_sex', 'cst_use_dept'],
   components: { Treeselect, Splitpanes, Pane },
   data() {
     return {
@@ -282,6 +294,7 @@ export default {
         userName: { label: '用户名称', visible: true },
         nickName: { label: '用户昵称', visible: true },
         deptName: { label: '部门', visible: true },
+        useDept: { label: '所属科室', visible: true },
         phonenumber: { label: '手机号码', visible: true },
         status: { label: '状态', visible: true },
         createTime: { label: '创建时间', visible: true }

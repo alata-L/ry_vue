@@ -85,6 +85,7 @@
 
 <script>
 import { listLifeUsage, getLifeUsage, addLifeUsage, updateLifeUsage, delLifeUsage } from '@/api/custom/lifeUsage'
+import { getInfo } from '@/api/login'
 
 export default {
   name: 'LifeUsage',
@@ -153,6 +154,12 @@ export default {
       const month = String(today.getMonth() + 1).padStart(2, '0')
       const day = String(today.getDate()).padStart(2, '0')
       this.form.statDate = `${year}-${month}-${day}`
+      // 如果当前登录用户有所属科室，自动填充使用科室
+      getInfo().then(res => {
+        if (res.user && res.user.useDept) {
+          this.form.useDept = res.user.useDept
+        }
+      })
       this.open = true
       this.title = '新增使用数据'
     },
