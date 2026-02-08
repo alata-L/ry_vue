@@ -8,7 +8,6 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.annotation.Excel.ColumnType;
 import com.ruoyi.common.annotation.Excel.Type;
-import com.ruoyi.common.annotation.Excels;
 import com.ruoyi.common.core.domain.BaseEntity;
 import com.ruoyi.common.xss.Xss;
 
@@ -26,7 +25,6 @@ public class SysUser extends BaseEntity
     private Long userId;
 
     /** 部门ID */
-    @Excel(name = "部门编号", type = Type.IMPORT)
     private Long deptId;
 
     /** 所属科室(词典cst_use_dept) */
@@ -60,7 +58,7 @@ public class SysUser extends BaseEntity
     private String password;
 
     /** 账号状态（0正常 1停用） */
-    @Excel(name = "账号状态", readConverterExp = "0=正常,1=停用")
+    @Excel(name = "账号状态", readConverterExp = "0=正常,1=停用", type = Type.EXPORT)
     private String status;
 
     /** 删除标志（0代表存在 2代表删除） */
@@ -78,10 +76,6 @@ public class SysUser extends BaseEntity
     private Date pwdUpdateDate;
 
     /** 部门对象 */
-    @Excels({
-        @Excel(name = "部门名称", targetAttr = "deptName", type = Type.EXPORT),
-        @Excel(name = "部门负责人", targetAttr = "leader", type = Type.EXPORT)
-    })
     private SysDept dept;
 
     /** 角色对象 */
