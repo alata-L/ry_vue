@@ -37,6 +37,28 @@ http://localhost:8080/swagger-ui/index.html
 - Node.js 8.9+
 - npm 3.0+
 
+## Redis 安装（Windows）
+
+1. **下载 Redis for Windows**
+   - 访问：https://github.com/tporadowski/redis/releases
+   - 下载最新版本的 `.msi` 安装包
+
+2. **安装并运行**
+   - 运行安装程序
+   - 安装完成后，在开始菜单找到 "Redis" 并启动
+   - 或使用命令行：`redis-server.exe`
+
+3. **验证Redis是否运行**
+   ```bash
+   # 方式1：使用redis-cli（如果已安装）
+   redis-cli ping
+   # 返回 PONG 表示成功
+   
+   # 方式2：检查端口
+   netstat -an | findstr 6379
+   # 看到 0.0.0.0:6379 表示服务正在监听
+   ```
+
 ## 启动步骤
 
 ### 1. 数据库准备
@@ -142,6 +164,9 @@ npm run dev
 2. **Redis连接失败**
    - 检查Redis服务是否启动
    - 检查Redis配置是否正确
+   - Windows用户：确保Redis服务正在运行（可通过任务管理器查看）
+   - 如果使用WSL，确保WSL中的Redis服务已启动：`wsl sudo service redis-server start`
+   - 测试连接：`redis-cli ping` 或 `telnet localhost 6379`
 
 3. **前端启动失败**
    - 检查Node.js版本是否符合要求（>=8.9）
