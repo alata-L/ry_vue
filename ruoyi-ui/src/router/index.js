@@ -62,27 +62,6 @@ export const constantRoutes = [
     hidden: true
   },
   {
-    path: '',
-    component: Layout,
-    redirect: 'index',
-    alwaysShow: true,
-    meta: { title: '首页', icon: 'dashboard' },
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/index'),
-        name: 'Index',
-        meta: { title: '首页-全院重点设备装备情况', icon: 'dashboard' }
-      },
-      {
-        path: 'index2',
-        component: () => import('@/views/index2'),
-        name: 'Index2',
-        meta: { title: '首页2-全院生命支持类设备装备使用情况', icon: 'dashboard' }
-      }
-    ]
-  },
-  {
     path: '/user',
     component: Layout,
     hidden: true,
@@ -139,6 +118,29 @@ export const constantRoutes = [
 
 // 动态路由，基于用户权限动态去加载
 export const dynamicRoutes = [
+  // 首页、index、index2 仅超级管理员(admin)和管理员(manger)可访问，普通角色(common)不可见
+  {
+    path: '',
+    component: Layout,
+    redirect: 'index',
+    alwaysShow: true,
+    roles: ['admin', 'manger'],
+    meta: { title: '首页', icon: 'dashboard' },
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/index'),
+        name: 'Index',
+        meta: { title: '首页-全院重点设备装备情况', icon: 'dashboard' }
+      },
+      {
+        path: 'index2',
+        component: () => import('@/views/index2'),
+        name: 'Index2',
+        meta: { title: '首页2-全院生命支持类设备装备使用情况', icon: 'dashboard' }
+      }
+    ]
+  },
   {
     path: '/system/user-auth',
     component: Layout,

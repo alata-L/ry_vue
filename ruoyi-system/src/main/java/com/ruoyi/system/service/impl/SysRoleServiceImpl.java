@@ -84,7 +84,20 @@ public class SysRoleServiceImpl implements ISysRoleService
     }
 
     /**
-     * 根据用户ID查询权限
+     * 根据用户ID查询已分配的角色列表（仅返回该用户拥有的角色，用于列表展示）
+     * 
+     * @param userId 用户ID
+     * @return 已分配的角色列表
+     */
+    @Override
+    public List<SysRole> selectAssignedRolesByUserId(Long userId)
+    {
+        List<SysRole> list = roleMapper.selectRolePermissionByUserId(userId);
+        return list != null ? list : new ArrayList<>();
+    }
+
+    /**
+     * 根据用户ID查询角色权限
      * 
      * @param userId 用户ID
      * @return 权限列表

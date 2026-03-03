@@ -60,6 +60,11 @@
                   <dict-tag :options="dict.type.cst_use_dept" :value="scope.row.useDept"/>
                 </template>
               </el-table-column>
+              <el-table-column label="用户角色" align="center" key="roleNames" v-if="columns.roleNames.visible" :show-overflow-tooltip="true" min-width="120">
+                <template slot-scope="scope">
+                  <span>{{ (scope.row.roles || []).map(r => r.roleName).filter(Boolean).join('，') || '-' }}</span>
+                </template>
+              </el-table-column>
               <el-table-column label="手机号码" align="center" key="phonenumber" prop="phonenumber" v-if="columns.phonenumber.visible" width="120" />
               <el-table-column label="状态" align="center" key="status" v-if="columns.status.visible">
                 <template slot-scope="scope">
@@ -267,6 +272,7 @@ export default {
         userName: { label: '用户名称', visible: true },
         nickName: { label: '用户昵称', visible: true },
         useDept: { label: '所属科室', visible: true },
+        roleNames: { label: '用户角色', visible: true },
         phonenumber: { label: '手机号码', visible: true },
         status: { label: '状态', visible: true },
         createTime: { label: '创建时间', visible: true }

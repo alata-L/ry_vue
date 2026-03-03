@@ -1,5 +1,6 @@
 package com.ruoyi.web.controller.system;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
@@ -62,6 +63,20 @@ public class SysUserController extends BaseController
     {
         startPage();
         List<SysUser> list = userService.selectUserList(user);
+        // 在 Controller 层显式填充用户已分配角色（selectRolesByUserId 返回全部角色+flag，只保留 flag 为 true 的）
+        if (list != null && !list.isEmpty()) {
+            for (SysUser u : list) {
+                List<SysRole> allRoles = roleService.selectRolesByUserId(u.getUserId());
+                if (allRoles != null) {
+                    List<SysRole> assigned = allRoles.stream()
+                            .filter(r -> r != null && r.isFlag())
+                            .collect(Collectors.toList());
+                    u.setRoles(assigned);
+                } else {
+                    u.setRoles(new ArrayList<>());
+                }
+            }
+        }
         return getDataTable(list);
     }
 

@@ -47,6 +47,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="dataScope"    column="data_scope"     />
         <result property="status"       column="role_status"    />
     </resultMap>
+
+    <!-- 用户列表用 resultMap：角色通过嵌套查询加载，保证分页正确且角色能正确显示 -->
+    <resultMap type="SysUser" id="SysUserListResult" extends="SysUserResult">
+        <collection property="roles" javaType="java.util.List" ofType="SysRole"
+                    select="com.ruoyi.system.mapper.SysRoleMapper.selectRolePermissionByUserId" column="user_id" />
+    </resultMap>
 	
 	<sql id="selectUserVo">
         select u.user_id, u.dept_id, u.use_dept, u.user_name, u.nick_name, u.email, u.avatar, u.phonenumber, u.password, u.sex, u.status, u.del_flag, u.login_ip, u.login_date, u.pwd_update_date, u.create_by, u.create_time, u.remark, 
@@ -58,8 +64,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		    left join sys_role r on r.role_id = ur.role_id
     </sql>
     
-    <select id="selectUserList" parameterType="SysUser" resultMap="SysUserResult">
-		select u.user_id, u.dept_id, u.use_dept, u.nick_name, u.user_name, u.email, u.avatar, u.phonenumber, u.sex, u.status, u.del_flag, u.login_ip, u.login_date, u.create_by, u.create_time, u.remark, d.dept_name, d.leader from sys_user u
+    <select id="selectUserList" parameterType="SysUser" resultMap="SysUserListResult">
+		select u.user_id, u.dept_id, u.use_dept, u.nick_name, u.user_name, u.email, u.avatar, u.phonenumber, u.sex, u.status, u.del_flag, u.login_ip, u.login_date, u.create_by, u.create_time, u.remark, d.dept_name, d.leader
+		from sys_user u
 		left join sys_dept d on u.dept_id = d.dept_id
 		where u.del_flag = '0'
 		<if test="userId != null and userId != 0">

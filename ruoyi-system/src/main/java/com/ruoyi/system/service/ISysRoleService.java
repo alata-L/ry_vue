@@ -29,6 +29,14 @@ public interface ISysRoleService
     public List<SysRole> selectRolesByUserId(Long userId);
 
     /**
+     * 根据用户ID查询已分配的角色列表（仅返回该用户拥有的角色，用于列表展示）
+     * 
+     * @param userId 用户ID
+     * @return 已分配的角色列表
+     */
+    public List<SysRole> selectAssignedRolesByUserId(Long userId);
+
+    /**
      * 根据用户ID查询角色权限
      * 
      * @param userId 用户ID

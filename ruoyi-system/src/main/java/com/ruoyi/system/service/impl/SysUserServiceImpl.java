@@ -76,7 +76,15 @@ public class SysUserServiceImpl implements ISysUserService
     @DataScope(deptAlias = "d", userAlias = "u")
     public List<SysUser> selectUserList(SysUser user)
     {
-        return userMapper.selectUserList(user);
+        List<SysUser> list = userMapper.selectUserList(user);
+        // 显式查询并设置每个用户的角色，避免嵌套查询懒加载在序列化时 Session 已关闭导致 roles 为空
+        if (list != null && !list.isEmpty()) {
+            for (SysUser u : list) {
+                List<SysRole> roles = roleMapper.selectRolePermissionByUserId(u.getUserId());
+                u.setRoles(roles != null ? roles : new ArrayList<>());
+            }
+        }
+        return list;
     }
 
     /**
