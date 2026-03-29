@@ -192,7 +192,7 @@ export default {
   computed: {
     pageTitle() {
       if (!this.useDept) return '科室设备统计'
-      const label = this.selectDictLabel(this.dict.label.cst_use_dept, this.useDept) || this.useDept
+      const label = this.selectDictLabel(this.dict.type.cst_use_dept, this.useDept) || this.useDept
       return `${label} - 通用设备统计`
     },
     // 计算最近12个月的范围（从当前月份往前推11个月，包含当前月）

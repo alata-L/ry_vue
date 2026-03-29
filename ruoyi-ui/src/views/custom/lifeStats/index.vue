@@ -44,7 +44,7 @@
           </el-row>
           <!-- 监护仪表格 -->
           <el-table :data="getTableDataByType('1')" border size="small" class="mt16">
-            <el-table-column label="使用科室" prop="useDept" min-width="140">
+            <el-table-column label="使用科室" prop="useDept" min-width="220">
               <template slot-scope="scope">
                 <el-link type="primary" :underline="false" @click="goDeptDetail(scope.row.useDept)">{{ useDeptLabel(scope.row.useDept) }}</el-link>
               </template>
@@ -96,7 +96,7 @@
           </el-row>
           <!-- 输液泵表格 -->
           <el-table :data="getTableDataByType('2')" border size="small" class="mt16">
-            <el-table-column label="使用科室" prop="useDept" min-width="140">
+            <el-table-column label="使用科室" prop="useDept" min-width="220">
               <template slot-scope="scope">
                 <el-link type="primary" :underline="false" @click="goDeptDetail(scope.row.useDept)">{{ useDeptLabel(scope.row.useDept) }}</el-link>
               </template>
@@ -148,7 +148,7 @@
           </el-row>
           <!-- 注射泵表格 -->
           <el-table :data="getTableDataByType('3')" border size="small" class="mt16">
-            <el-table-column label="使用科室" prop="useDept" min-width="140">
+            <el-table-column label="使用科室" prop="useDept" min-width="220">
               <template slot-scope="scope">
                 <el-link type="primary" :underline="false" @click="goDeptDetail(scope.row.useDept)">{{ useDeptLabel(scope.row.useDept) }}</el-link>
               </template>
@@ -187,7 +187,7 @@ export default {
   },
   methods: {
     useDeptLabel(code) {
-      return this.selectDictLabel(this.dict.label.cst_use_dept, code) || code || ''
+      return this.selectDictLabel(this.dict.type.cst_use_dept, code) || code || ''
     },
     // 按设备类型获取统计汇总
     getSummaryByType(equipType) {

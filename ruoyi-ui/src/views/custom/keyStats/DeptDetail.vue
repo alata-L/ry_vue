@@ -106,7 +106,7 @@ export default {
   computed: {
     pageTitle() {
       if (!this.useDept) return '科室重点设备统计'
-      const label = this.selectDictLabel(this.dict.label.cst_use_dept, this.useDept) || this.useDept
+      const label = this.selectDictLabel(this.dict.type.cst_use_dept, this.useDept) || this.useDept
       return `${label} - 重点设备统计`
     }
   },

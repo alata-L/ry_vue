@@ -51,7 +51,7 @@
           </el-row>
           <!-- 全部表格 -->
           <el-table :data="getTableDataByTab('all')" border size="small" class="mt16">
-            <el-table-column label="科室" prop="useDept" min-width="200">
+            <el-table-column label="科室" prop="useDept" min-width="240">
               <template slot-scope="scope">
                 <el-link type="primary" :underline="false" @click="goDeptDetail(scope.row.useDept)">{{ useDeptLabel(scope.row.useDept) }}</el-link>
               </template>
@@ -126,7 +126,7 @@
           </el-row>
           <!-- ≥50万表格 -->
           <el-table :data="getTableDataByTab('50w')" border size="small" class="mt16">
-            <el-table-column label="科室" prop="useDept" min-width="200">
+            <el-table-column label="科室" prop="useDept" min-width="240">
               <template slot-scope="scope">
                 <el-link type="primary" :underline="false" @click="goDeptDetail(scope.row.useDept)">{{ useDeptLabel(scope.row.useDept) }}</el-link>
               </template>
@@ -201,7 +201,7 @@
           </el-row>
           <!-- ≥100万表格 -->
           <el-table :data="getTableDataByTab('100w')" border size="small" class="mt16">
-            <el-table-column label="科室" prop="useDept" min-width="200">
+            <el-table-column label="科室" prop="useDept" min-width="240">
               <template slot-scope="scope">
                 <el-link type="primary" :underline="false" @click="goDeptDetail(scope.row.useDept)">{{ useDeptLabel(scope.row.useDept) }}</el-link>
               </template>
@@ -258,7 +258,7 @@ export default {
   },
   methods: {
     useDeptLabel(code) {
-      return this.selectDictLabel(this.dict.label.cst_use_dept, code) || code || ''
+      return this.selectDictLabel(this.dict.type.cst_use_dept, code) || code || ''
     },
     formatMoney(v) {
       if (v == null || v === '') return '0.00'
