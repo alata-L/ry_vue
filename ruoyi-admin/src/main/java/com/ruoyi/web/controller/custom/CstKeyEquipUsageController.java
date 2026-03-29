@@ -1,6 +1,8 @@
 package com.ruoyi.web.controller.custom;
 
+import java.util.Collections;
 import java.util.List;
+import com.github.pagehelper.PageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,13 +12,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.custom.domain.CstKeyEquip;
 import com.ruoyi.custom.domain.CstKeyEquipUsage;
+import com.ruoyi.custom.service.ICstKeyEquipService;
 import com.ruoyi.custom.service.ICstKeyEquipUsageService;
 
 /**
@@ -30,6 +36,30 @@ public class CstKeyEquipUsageController extends BaseController {
 
     @Autowired
     private ICstKeyEquipUsageService cstKeyEquipUsageService;
+
+    @Autowired
+    private ICstKeyEquipService cstKeyEquipService;
+
+    /**
+     * 上报页按科室拉取重点设备下拉（仅需 keyUsage 权限，不依赖 keyEquip:list）
+     */
+    @PreAuthorize("@ss.hasAnyPermi('custom:keyUsage:list,custom:keyUsage:query,custom:keyUsage:add,custom:keyUsage:edit')")
+    @GetMapping("/options/keyEquips")
+    public AjaxResult listKeyEquipsForUsage(@RequestParam String useDept) {
+        if (StringUtils.isEmpty(useDept)) {
+            return success(Collections.emptyList());
+        }
+        CstKeyEquip query = new CstKeyEquip();
+        query.setUseDept(useDept);
+        List<CstKeyEquip> list;
+        try {
+            PageHelper.startPage(1, 500);
+            list = cstKeyEquipService.selectCstKeyEquipList(query);
+        } finally {
+            clearPage();
+        }
+        return success(list);
+    }
 
     @PreAuthorize("@ss.hasPermi('custom:keyUsage:list')")
     @GetMapping("/list")

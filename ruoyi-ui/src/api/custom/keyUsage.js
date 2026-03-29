@@ -8,6 +8,15 @@ export function listKeyUsage(query) {
   })
 }
 
+/** 上报弹窗：按科室查询重点设备选项（仅需 keyUsage 权限） */
+export function listKeyEquipsForUsage(useDept) {
+  return request({
+    url: '/custom/keyUsage/options/keyEquips',
+    method: 'get',
+    params: { useDept }
+  })
+}
+
 export function getKeyUsage(id) {
   return request({
     url: '/custom/keyUsage/' + id,

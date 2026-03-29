@@ -91,8 +91,7 @@
 </template>
 
 <script>
-import { listKeyUsage, getKeyUsage, addKeyUsage, updateKeyUsage, delKeyUsage } from '@/api/custom/keyUsage'
-import { listKeyEquip } from '@/api/custom/keyEquip'
+import { listKeyUsage, getKeyUsage, addKeyUsage, updateKeyUsage, delKeyUsage, listKeyEquipsForUsage } from '@/api/custom/keyUsage'
 import { getInfo } from '@/api/login'
 
 export default {
@@ -134,8 +133,8 @@ export default {
         this.keyEquipOptions = []
         return
       }
-      listKeyEquip({ useDept, pageNum: 1, pageSize: 500 }).then(res => {
-        this.keyEquipOptions = res.rows || []
+      listKeyEquipsForUsage(useDept).then(res => {
+        this.keyEquipOptions = res.data || []
       })
     },
     getList() {
