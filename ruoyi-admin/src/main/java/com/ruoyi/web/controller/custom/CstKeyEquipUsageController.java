@@ -40,6 +40,9 @@ public class CstKeyEquipUsageController extends BaseController {
     @Autowired
     private ICstKeyEquipService cstKeyEquipService;
 
+    @Autowired
+    private CreateByNickNameHelper createByNickNameHelper;
+
     /**
      * 上报页按科室拉取重点设备下拉（仅需 keyUsage 权限，不依赖 keyEquip:list）
      */
@@ -66,13 +69,16 @@ public class CstKeyEquipUsageController extends BaseController {
     public TableDataInfo list(CstKeyEquipUsage row) {
         startPage();
         List<CstKeyEquipUsage> list = cstKeyEquipUsageService.selectCstKeyEquipUsageList(row);
+        createByNickNameHelper.fillKeyEquipUsage(list);
         return getDataTable(list);
     }
 
     @PreAuthorize("@ss.hasPermi('custom:keyUsage:query')")
     @GetMapping("/{id}")
     public AjaxResult getInfo(@PathVariable Long id) {
-        return success(cstKeyEquipUsageService.selectCstKeyEquipUsageById(id));
+        CstKeyEquipUsage row = cstKeyEquipUsageService.selectCstKeyEquipUsageById(id);
+        createByNickNameHelper.fillKeyEquipUsage(row);
+        return success(row);
     }
 
     @PreAuthorize("@ss.hasPermi('custom:keyUsage:add')")

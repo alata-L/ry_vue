@@ -31,18 +31,24 @@ public class CstLifeUsageController extends BaseController {
     @Autowired
     private ICstLifeUsageService cstLifeUsageService;
 
+    @Autowired
+    private CreateByNickNameHelper createByNickNameHelper;
+
     @PreAuthorize("@ss.hasPermi('custom:lifeUsage:list')")
     @GetMapping("/list")
     public TableDataInfo list(CstLifeUsage row) {
         startPage();
         List<CstLifeUsage> list = cstLifeUsageService.selectCstLifeUsageList(row);
+        createByNickNameHelper.fillLifeUsage(list);
         return getDataTable(list);
     }
 
     @PreAuthorize("@ss.hasPermi('custom:lifeUsage:query')")
     @GetMapping("/{id}")
     public AjaxResult getInfo(@PathVariable Long id) {
-        return success(cstLifeUsageService.selectCstLifeUsageById(id));
+        CstLifeUsage row = cstLifeUsageService.selectCstLifeUsageById(id);
+        createByNickNameHelper.fillLifeUsage(row);
+        return success(row);
     }
 
     @PreAuthorize("@ss.hasPermi('custom:lifeUsage:add')")

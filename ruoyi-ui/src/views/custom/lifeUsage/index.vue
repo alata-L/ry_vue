@@ -36,7 +36,12 @@
     <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="上报日期" align="center" prop="statDate" width="110" />
-      <el-table-column label="设备类型" align="center" prop="equipType" width="90">
+      <el-table-column label="上报人" align="center" width="260" show-overflow-tooltip>
+        <template slot-scope="scope">
+          <span>{{ reporterNick(scope.row) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="设备类型" align="center" prop="equipType" width="78">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.cst_life_equip_type" :value="scope.row.equipType"/>
         </template>
@@ -116,6 +121,11 @@ export default {
     this.getList()
   },
   methods: {
+    /** 上报人展示：后端写入 row.params.createByNickName，兼容旧字段 */
+    reporterNick(row) {
+      const p = row && row.params
+      return (p && p.createByNickName) || (row && row.createByNickName) || (row && row.createBy) || '—'
+    },
     getList() {
       this.loading = true
       listLifeUsage(this.addDateRange(this.queryParams, this.dateRange)).then(res => {

@@ -34,6 +34,11 @@
     <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="上报日期" align="center" prop="reportDate" width="110" />
+      <el-table-column label="上报人" align="center" width="100" show-overflow-tooltip>
+        <template slot-scope="scope">
+          <span>{{ reporterNick(scope.row) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="设备编号" align="center" prop="equipNo" min-width="100" />
       <el-table-column label="设备描述" align="center" prop="equipDesc" min-width="140" show-overflow-tooltip />
       <el-table-column label="使用科室" align="center" prop="useDept" min-width="120" show-overflow-tooltip />
@@ -122,6 +127,11 @@ export default {
     this.getList()
   },
   methods: {
+    /** 上报人展示：后端写入 row.params.createByNickName，兼容旧字段 */
+    reporterNick(row) {
+      const p = row && row.params
+      return (p && p.createByNickName) || (row && row.createByNickName) || (row && row.createBy) || '—'
+    },
     /** 使用科室变更：清空设备选择并按科室加载重点设备列表 */
     onUseDeptChange() {
       this.form.equipId = undefined
