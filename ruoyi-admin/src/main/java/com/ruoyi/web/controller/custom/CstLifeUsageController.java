@@ -17,7 +17,9 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.custom.domain.CstLifeUsage;
+import com.ruoyi.custom.domain.CstReportUsageHist;
 import com.ruoyi.custom.service.ICstLifeUsageService;
+import com.ruoyi.custom.service.ICstReportUsageHistService;
 
 /**
  * 通用设备日使用上报
@@ -33,6 +35,20 @@ public class CstLifeUsageController extends BaseController {
 
     @Autowired
     private CreateByNickNameHelper createByNickNameHelper;
+
+    @Autowired
+    private ICstReportUsageHistService reportUsageHistService;
+
+    @PreAuthorize("@ss.hasPermi('custom:lifeUsage:history:list')")
+    @GetMapping("/history/list")
+    public TableDataInfo historyList(CstReportUsageHist query) {
+        query.setBizType(CstReportUsageHist.BIZ_LIFE);
+        startPage();
+        List<CstReportUsageHist> list = reportUsageHistService.selectCstReportUsageHistList(query);
+        createByNickNameHelper.fillReportUsageHistReporterNick(list);
+        createByNickNameHelper.fillReportUsageHistUseDeptDisplay(list);
+        return getDataTable(list);
+    }
 
     @PreAuthorize("@ss.hasPermi('custom:lifeUsage:list')")
     @GetMapping("/list")

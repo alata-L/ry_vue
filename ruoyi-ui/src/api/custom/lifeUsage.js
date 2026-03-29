@@ -45,3 +45,11 @@ export function sumLifeUsage(params) {
     params: params
   })
 }
+
+export function listLifeUsageHistory(query) {
+  return request({
+    url: '/custom/lifeUsage/history/list',
+    method: 'get',
+    params: query
+  })
+}

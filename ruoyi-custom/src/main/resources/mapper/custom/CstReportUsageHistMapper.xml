@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.custom.mapper.CstReportUsageHistMapper">
+
+    <resultMap type="com.ruoyi.custom.domain.CstReportUsageHist" id="CstReportUsageHistResult">
+        <id     property="id"           column="id" />
+        <result property="bizType"      column="biz_type" />
+        <result property="usageId"      column="usage_id" />
+        <result property="operType"     column="oper_type" />
+        <result property="changeTime"   column="change_time" />
+        <result property="changeBy"     column="change_by" />
+        <result property="changeByNick" column="change_by_nick" />
+        <result property="beforeJson"   column="before_json" />
+        <result property="afterJson"    column="after_json" />
+        <result property="remark"       column="remark" />
+    </resultMap>
+
+    <insert id="insertCstReportUsageHist" parameterType="com.ruoyi.custom.domain.CstReportUsageHist" useGeneratedKeys="true" keyProperty="id">
+        insert into cst_report_usage_hist (biz_type, usage_id, oper_type, change_time, change_by, change_by_nick, before_json, after_json, remark)
+        values (#{bizType}, #{usageId}, #{operType}, sysdate(), #{changeBy}, #{changeByNick}, #{beforeJson}, #{afterJson}, #{remark})
+    </insert>
+
+    <select id="selectCstReportUsageHistList" parameterType="com.ruoyi.custom.domain.CstReportUsageHist" resultMap="CstReportUsageHistResult">
+        select h.id, h.biz_type, h.usage_id, h.oper_type, h.change_time, h.change_by,
+               ifnull(nullif(trim(su.nick_name), ''), h.change_by) as change_by_nick,
+               h.before_json, h.after_json, h.remark
+        from cst_report_usage_hist h
+        left join sys_user su on h.change_by = su.user_name and su.del_flag = '0'
+        <where>
+            <if test="bizType != null and bizType != ''"> and h.biz_type = #{bizType}</if>
+            <if test="usageId != null"> and h.usage_id = #{usageId}</if>
+            <if test="operType != null and operType != ''"> and h.oper_type = #{operType}</if>
+            <if test="changeBy != null and changeBy != ''"> and h.change_by = #{changeBy}</if>
+            <!-- 按快照中的上报日期筛选（与上报页「上报日期」一致） -->
+            <if test="bizType == 'LIFE' and reportBegin != null and reportBegin != ''">
+                and ifnull(nullif(JSON_UNQUOTE(JSON_EXTRACT(h.after_json, '$.statDate')), ''),
+                    JSON_UNQUOTE(JSON_EXTRACT(h.before_json, '$.statDate'))) &gt;= #{reportBegin}
+            </if>
+            <if test="bizType == 'LIFE' and reportEnd != null and reportEnd != ''">
+                and ifnull(nullif(JSON_UNQUOTE(JSON_EXTRACT(h.after_json, '$.statDate')), ''),
+                    JSON_UNQUOTE(JSON_EXTRACT(h.before_json, '$.statDate'))) &lt;= #{reportEnd}
+            </if>
+            <if test="bizType == 'KEY' and reportBegin != null and reportBegin != ''">
+                and ifnull(nullif(JSON_UNQUOTE(JSON_EXTRACT(h.after_json, '$.reportDate')), ''),
+                    JSON_UNQUOTE(JSON_EXTRACT(h.before_json, '$.reportDate'))) &gt;= #{reportBegin}
+            </if>
+            <if test="bizType == 'KEY' and reportEnd != null and reportEnd != ''">
+                and ifnull(nullif(JSON_UNQUOTE(JSON_EXTRACT(h.after_json, '$.reportDate')), ''),
+                    JSON_UNQUOTE(JSON_EXTRACT(h.before_json, '$.reportDate'))) &lt;= #{reportEnd}
+            </if>
+            <if test="bizType == 'LIFE' and equipType != null and equipType != ''">
+                and ifnull(nullif(JSON_UNQUOTE(JSON_EXTRACT(h.after_json, '$.equipType')), ''),
+                    JSON_UNQUOTE(JSON_EXTRACT(h.before_json, '$.equipType'))) = #{equipType}
+            </if>
+            <if test="bizType == 'LIFE' and useDept != null and useDept != ''">
+                and ifnull(nullif(JSON_UNQUOTE(JSON_EXTRACT(h.after_json, '$.useDept')), ''),
+                    JSON_UNQUOTE(JSON_EXTRACT(h.before_json, '$.useDept'))) = #{useDept}
+            </if>
+            <if test="bizType == 'KEY' and useDept != null and useDept != ''">
+                and ifnull(nullif(JSON_UNQUOTE(JSON_EXTRACT(h.after_json, '$.useDept')), ''),
+                    JSON_UNQUOTE(JSON_EXTRACT(h.before_json, '$.useDept'))) = #{useDept}
+            </if>
+            <if test="bizType == 'KEY' and equipDesc != null and equipDesc != ''">
+                and (
+                    ifnull(JSON_UNQUOTE(JSON_EXTRACT(h.after_json, '$.equipDesc')), '') like concat('%', #{equipDesc}, '%')
+                    or ifnull(JSON_UNQUOTE(JSON_EXTRACT(h.before_json, '$.equipDesc')), '') like concat('%', #{equipDesc}, '%')
+                )
+            </if>
+            <if test="params != null and params.beginTime != null and params.beginTime != ''">
+                and h.change_time &gt;= #{params.beginTime}
+            </if>
+            <if test="params != null and params.endTime != null and params.endTime != ''">
+                and h.change_time &lt;= concat(#{params.endTime}, ' 23:59:59')
+            </if>
+        </where>
+        order by h.change_time desc, h.id desc
+    </select>
+</mapper>

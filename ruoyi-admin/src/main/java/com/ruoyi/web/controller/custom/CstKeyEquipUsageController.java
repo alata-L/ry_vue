@@ -22,8 +22,10 @@ import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.custom.domain.CstKeyEquip;
 import com.ruoyi.custom.domain.CstKeyEquipUsage;
+import com.ruoyi.custom.domain.CstReportUsageHist;
 import com.ruoyi.custom.service.ICstKeyEquipService;
 import com.ruoyi.custom.service.ICstKeyEquipUsageService;
+import com.ruoyi.custom.service.ICstReportUsageHistService;
 
 /**
  * 重点设备上报（月度使用数据）
@@ -42,6 +44,20 @@ public class CstKeyEquipUsageController extends BaseController {
 
     @Autowired
     private CreateByNickNameHelper createByNickNameHelper;
+
+    @Autowired
+    private ICstReportUsageHistService reportUsageHistService;
+
+    @PreAuthorize("@ss.hasPermi('custom:keyUsage:history:list')")
+    @GetMapping("/history/list")
+    public TableDataInfo historyList(CstReportUsageHist query) {
+        query.setBizType(CstReportUsageHist.BIZ_KEY);
+        startPage();
+        List<CstReportUsageHist> list = reportUsageHistService.selectCstReportUsageHistList(query);
+        createByNickNameHelper.fillReportUsageHistReporterNick(list);
+        createByNickNameHelper.fillReportUsageHistUseDeptDisplay(list);
+        return getDataTable(list);
+    }
 
     /**
      * 上报页按科室拉取重点设备下拉（仅需 keyUsage 权限，不依赖 keyEquip:list）

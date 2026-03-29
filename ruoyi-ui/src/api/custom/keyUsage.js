@@ -46,3 +46,11 @@ export function delKeyUsage(ids) {
     method: 'delete'
   })
 }
+
+export function listKeyUsageHistory(query) {
+  return request({
+    url: '/custom/keyUsage/history/list',
+    method: 'get',
+    params: query
+  })
+}
