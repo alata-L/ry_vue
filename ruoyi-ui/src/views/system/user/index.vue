@@ -10,8 +10,8 @@
                 <el-input v-model="queryParams.userName" placeholder="请输入用户名称" clearable style="width: 240px" @keyup.enter.native="handleQuery" />
               </el-form-item>
               <el-form-item label="所属科室" prop="useDept">
-                <el-select v-model="queryParams.useDept" placeholder="请选择所属科室" clearable filterable allow-create style="width: 240px">
-                  <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="dict.value" />
+                <el-select v-model="queryParams.useDept" placeholder="请选择所属科室" clearable filterable style="width: 240px">
+                  <el-option v-for="dict in dict.type.cst_use_dept" :key="(dict.raw && dict.raw.dictCode) || dict.value" :label="dict.label" :value="dictCodeOptionValue(dict)" />
                 </el-select>
               </el-form-item>
               <el-form-item label="手机号码" prop="phonenumber">
@@ -52,10 +52,10 @@
 
             <el-table v-loading="loading" :data="userList" @selection-change="handleSelectionChange">
               <el-table-column type="selection" width="50" align="center" />
-              <el-table-column label="用户编号" align="center" key="userId" prop="userId" v-if="columns.userId.visible" />
+              <el-table-column label="用户编号" align="center" key="userId" prop="userId" v-if="columns.userId.visible" width="100" />
               <el-table-column label="用户名称" align="center" key="userName" prop="userName" v-if="columns.userName.visible" :show-overflow-tooltip="true" />
               <el-table-column label="用户昵称" align="center" key="nickName" prop="nickName" v-if="columns.nickName.visible" :show-overflow-tooltip="true" />
-              <el-table-column label="所属科室" align="center" key="useDept" prop="useDept" v-if="columns.useDept.visible" :show-overflow-tooltip="true">
+              <el-table-column label="所属科室" align="center" key="useDept" prop="useDept" v-if="columns.useDept.visible" min-width="220" :show-overflow-tooltip="true">
                 <template slot-scope="scope">
                   <dict-tag :options="dict.type.cst_use_dept" :value="scope.row.useDept"/>
                 </template>
@@ -65,8 +65,8 @@
                   <span>{{ (scope.row.roles || []).map(r => r.roleName).filter(Boolean).join('，') || '-' }}</span>
                 </template>
               </el-table-column>
-              <el-table-column label="手机号码" align="center" key="phonenumber" prop="phonenumber" v-if="columns.phonenumber.visible" width="120" />
-              <el-table-column label="状态" align="center" key="status" v-if="columns.status.visible">
+              <el-table-column label="手机号码" align="center" key="phonenumber" prop="phonenumber" v-if="columns.phonenumber.visible" width="100" />
+              <el-table-column label="状态" align="center" key="status" v-if="columns.status.visible" width="100">
                 <template slot-scope="scope">
                   <el-switch v-model="scope.row.status" active-value="0" inactive-value="1" @change="handleStatusChange(scope.row)"></el-switch>
                 </template>
@@ -102,15 +102,15 @@
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-row>
           <el-col :span="12">
-            <el-form-item label="用户昵称" prop="nickName">
-              <el-input v-model="form.nickName" placeholder="请输入用户昵称" maxlength="30" />
+            <el-form-item label="用户性别">
+              <el-select v-model="form.sex" placeholder="请选择性别" style="width:100%">
+                <el-option v-for="dict in dict.type.sys_user_sex" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="所属科室" prop="useDept">
-              <el-select v-model="form.useDept" placeholder="请选择所属科室" clearable filterable allow-create style="width:100%">
-                <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
-              </el-select>
+            <el-form-item label="用户昵称" prop="nickName">
+              <el-input v-model="form.nickName" placeholder="请输入用户昵称" maxlength="30" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -121,6 +121,15 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
+            <el-form-item label="状态">
+              <el-radio-group v-model="form.status">
+                <el-radio v-for="dict in dict.type.sys_normal_disable" :key="dict.value" :label="dict.value">{{ dict.label }}</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
             <el-form-item label="邮箱" prop="email">
               <el-input v-model="form.email" placeholder="请输入邮箱" maxlength="50" />
             </el-form-item>
@@ -139,25 +148,18 @@
           </el-col>
         </el-row>
         <el-row>
-          <el-col :span="12">
-            <el-form-item label="用户性别">
-              <el-select v-model="form.sex" placeholder="请选择性别">
-                <el-option v-for="dict in dict.type.sys_user_sex" :key="dict.value" :label="dict.label" :value="dict.value"></el-option>
+          <el-col :span="24">
+            <el-form-item label="所属科室" prop="deptDictCodes">
+              <el-select v-model="form.deptDictCodes" multiple placeholder="请选择所属科室" clearable filterable style="width:100%">
+                <el-option v-for="dict in dict.type.cst_use_dept" :key="(dict.raw && dict.raw.dictCode) || dict.value" :label="dict.label" :value="dictCodeOptionValue(dict)"></el-option>
               </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="状态">
-              <el-radio-group v-model="form.status">
-                <el-radio v-for="dict in dict.type.sys_normal_disable" :key="dict.value" :label="dict.value">{{ dict.label }}</el-radio>
-              </el-radio-group>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row>
-          <el-col :span="12">
+          <el-col :span="24">
             <el-form-item label="角色">
-              <el-select v-model="form.roleIds" multiple placeholder="请选择角色">
+              <el-select v-model="form.roleIds" multiple placeholder="请选择角色" style="width:100%">
                 <el-option v-for="item in roleOptions" :key="item.roleId" :label="item.roleName" :value="item.roleId" :disabled="item.status == 1"></el-option>
               </el-select>
             </el-form-item>
@@ -355,7 +357,8 @@ export default {
         status: "0",
         remark: undefined,
         postIds: [],
-        roleIds: []
+        roleIds: [],
+        deptDictCodes: []
       }
       this.resetForm("form")
     },
@@ -369,6 +372,49 @@ export default {
       this.dateRange = []
       this.resetForm("queryForm")
       this.handleQuery()
+    },
+    /** 与角色 roleId 一致：选项 value 用 sys_dict_data.dict_code（数字），避免 dict_value 与编码不一致时多选丢失 */
+    dictCodeOptionValue(dict) {
+      if (!dict) return null
+      const d = dict.raw
+      if (d && d.dictCode != null) {
+        const n = Number(d.dictCode)
+        return Number.isFinite(n) ? n : this.parseDictCode(dict.value)
+      }
+      return this.parseDictCode(dict.value)
+    },
+    /** 词典键值为 dict_code（数字字符串），与后端 Long[] 对齐 */
+    parseDictCode(v) {
+      const n = Number(v)
+      return Number.isFinite(n) ? n : v
+    },
+    /**
+     * 修改用户回填「所属科室」多选：优先接口 deptDictCodes；为空时用 use_dept 解析（支持逗号分隔 dict_code 或中文标签）
+     */
+    buildDeptDictCodesForForm(row) {
+      const raw = row.deptDictCodes
+      if (Array.isArray(raw) && raw.length > 0) {
+        return raw.map((x) => this.parseDictCode(x)).filter((x) => x !== null && x !== undefined && x !== '')
+      }
+      const u = row.useDept
+      if (u == null || u === '') return []
+      const list = this.dict.type.cst_use_dept || []
+      return String(u)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((seg) => {
+          const n = Number(seg)
+          if (Number.isFinite(n)) return n
+          const hit = list.find(
+            (d) =>
+              d.label === seg ||
+              String(d.value) === seg ||
+              (d.raw && (d.raw.dictLabel === seg || String(d.raw.dictCode) === seg))
+          )
+          return hit ? this.dictCodeOptionValue(hit) : null
+        })
+        .filter((x) => x != null && x !== '')
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
@@ -410,6 +456,7 @@ export default {
         this.roleOptions = response.roles
         this.$set(this.form, "postIds", response.postIds)
         this.$set(this.form, "roleIds", response.roleIds)
+        this.$set(this.form, "deptDictCodes", this.buildDeptDictCodesForForm(response.data))
         this.open = true
         this.title = "修改用户"
         this.form.password = ""
@@ -439,18 +486,34 @@ export default {
       const userId = row.userId
       this.$router.push("/system/user-auth/role/" + userId)
     },
+    /**
+     * 与 roleIds 一致：只提交 deptDictCodes 数组；不传 useDept，避免旧单字段覆盖导致后端只解析出一条关联。
+     * 必须用 this.form.deptDictCodes（与 v-model 同源）；勿用 $refs.form.model（Element 未必暴露且易与界面脱节）。
+     */
+    buildUserSubmitPayload() {
+      const raw = Array.isArray(this.form.deptDictCodes) ? [...this.form.deptDictCodes] : []
+      const codes = raw
+        .map((x) => this.parseDictCode(x))
+        .filter((x) => x != null && x !== '' && Number.isFinite(Number(x)))
+      const unique = [...new Set(codes)]
+      const payload = { ...this.form }
+      payload.deptDictCodes = unique
+      delete payload.useDept
+      return payload
+    },
     /** 提交按钮 */
     submitForm: function() {
       this.$refs["form"].validate(valid => {
         if (valid) {
+          const payload = this.buildUserSubmitPayload()
           if (this.form.userId != undefined) {
-            updateUser(this.form).then(response => {
+            updateUser(payload).then(response => {
               this.$modal.msgSuccess("修改成功")
               this.open = false
               this.getList()
             })
           } else {
-            addUser(this.form).then(response => {
+            addUser(payload).then(response => {
               this.$modal.msgSuccess("新增成功")
               this.open = false
               this.getList()

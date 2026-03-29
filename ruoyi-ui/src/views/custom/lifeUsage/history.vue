@@ -11,8 +11,8 @@
         </el-select>
       </el-form-item>
       <el-form-item label="使用科室" prop="useDept">
-        <el-select v-model="queryParams.useDept" placeholder="请选择" clearable filterable allow-create style="width:180px">
-          <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="dict.value" />
+        <el-select v-model="queryParams.useDept" placeholder="请选择" clearable filterable style="width:180px">
+          <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="parseDictCode(dict.value)" />
         </el-select>
       </el-form-item>
       <el-form-item label="修改人" prop="changeBy">
@@ -50,7 +50,8 @@
       </el-table-column>
       <el-table-column label="使用科室" align="center" min-width="110" show-overflow-tooltip>
         <template slot-scope="scope">
-          <span>{{ useDeptHist(scope.row) }}</span>
+          <dict-tag v-if="deptHistTagValue(scope.row)" :options="dict.type.cst_use_dept" :value="deptHistTagValue(scope.row)" />
+          <span v-else>—</span>
         </template>
       </el-table-column>
       <el-table-column label="当日使用台数" align="center" width="110">
@@ -79,6 +80,7 @@
             <template slot-scope="scope">
               <div class="hist-cell-inner">
                 <dict-tag v-if="scope.row.key === 'equipType'" :options="dict.type.cst_life_equip_type" :value="scope.row.before" />
+                <dict-tag v-else-if="scope.row.key === 'useDept'" :options="dict.type.cst_use_dept" :value="scope.row.before" />
                 <span v-else>{{ formatLifeValue(scope.row.key, scope.row.before) }}</span>
               </div>
             </template>
@@ -87,6 +89,7 @@
             <template slot-scope="scope">
               <div class="hist-cell-inner">
                 <dict-tag v-if="scope.row.key === 'equipType'" :options="dict.type.cst_life_equip_type" :value="scope.row.after" />
+                <dict-tag v-else-if="scope.row.key === 'useDept'" :options="dict.type.cst_use_dept" :value="scope.row.after" />
                 <span v-else>{{ formatLifeValue(scope.row.key, scope.row.after) }}</span>
               </div>
             </template>
@@ -195,12 +198,17 @@ export default {
       const p = row.params || {}
       return p.reporterNick != null && p.reporterNick !== '' ? p.reporterNick : '—'
     },
-    /** 快照无 useDept 时后端 params.useDeptDisplay 回填主表科室 */
-    useDeptHist(row) {
+    /** 列表/字典标签：优先快照中的 dict_code，否则用后端回填的展示名（旧数据可能为中文） */
+    deptHistTagValue(row) {
       const j = this.snapLife(row).useDept
       if (j != null && j !== '') return j
       const p = row.params || {}
-      return p.useDeptDisplay != null && p.useDeptDisplay !== '' ? p.useDeptDisplay : '—'
+      const d = p.useDeptDisplay
+      return d != null && d !== '' ? d : null
+    },
+    parseDictCode(v) {
+      const n = Number(v)
+      return Number.isFinite(n) ? n : v
     },
     /** 与通用设备上报列表「上报日期」一致：取快照 JSON 中 statDate */
     reportDateFromRow(row) {

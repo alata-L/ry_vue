@@ -168,6 +168,7 @@ function monthStr(d) {
 
 export default {
   name: 'LifeStatsDeptDetail',
+  dicts: ['cst_use_dept'],
   data() {
     // 默认选择当前月份
     const now = new Date()
@@ -190,7 +191,9 @@ export default {
   },
   computed: {
     pageTitle() {
-      return this.useDept ? `${this.useDept} - 通用设备统计` : '科室设备统计'
+      if (!this.useDept) return '科室设备统计'
+      const label = this.selectDictLabel(this.dict.label.cst_use_dept, this.useDept) || this.useDept
+      return `${label} - 通用设备统计`
     },
     // 计算最近12个月的范围（从当前月份往前推11个月，包含当前月）
     monthRange() {

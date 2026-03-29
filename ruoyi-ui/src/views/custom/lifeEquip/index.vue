@@ -2,8 +2,8 @@
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="88px">
       <el-form-item label="使用科室" prop="useDept">
-        <el-select v-model="queryParams.useDept" placeholder="请选择使用科室" clearable filterable allow-create>
-          <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="dict.value" />
+        <el-select v-model="queryParams.useDept" placeholder="请选择使用科室" clearable filterable>
+          <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="parseDictCode(dict.value)" />
         </el-select>
       </el-form-item>
       <el-form-item label="设备类型" prop="equipType">
@@ -51,7 +51,11 @@
       <el-table-column label="型号" align="center" prop="model" min-width="100" />
       <el-table-column label="累计购置价值" align="center" prop="totalValue" width="110" />
       <el-table-column label="资本化日期" align="center" prop="capDate" width="110" />
-      <el-table-column label="使用科室" align="center" prop="useDept" min-width="120" show-overflow-tooltip />
+      <el-table-column label="使用科室" align="center" prop="useDept" min-width="120" show-overflow-tooltip>
+        <template slot-scope="scope">
+          <dict-tag :options="dict.type.cst_use_dept" :value="scope.row.useDept" />
+        </template>
+      </el-table-column>
       <el-table-column label="设备类型" align="center" prop="equipType" width="90">
         <template slot-scope="scope">
           <dict-tag :options="dict.type.cst_life_equip_type" :value="scope.row.equipType"/>
@@ -72,8 +76,8 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="使用科室" prop="useDept">
-              <el-select v-model="form.useDept" placeholder="请选择或输入使用科室" filterable allow-create style="width:100%">
-                <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="dict.value" />
+              <el-select v-model="form.useDept" placeholder="请选择使用科室" filterable style="width:100%">
+                <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="parseDictCode(dict.value)" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -187,6 +191,10 @@ export default {
     this.getList()
   },
   methods: {
+    parseDictCode(v) {
+      const n = Number(v)
+      return Number.isFinite(n) ? n : v
+    },
     getList() {
       this.loading = true
       listLifeEquip(this.queryParams).then(res => {

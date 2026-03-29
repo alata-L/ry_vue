@@ -1,7 +1,7 @@
 <template>
   <div>
     <template v-for="(item, index) in options">
-      <template v-if="values.includes(item.value)">
+      <template v-if="values.some(v => optionMatchesValue(item, v))">
         <span
           v-if="(item.raw.listClass == 'default' || item.raw.listClass == '') && (item.raw.cssClass == '' || item.raw.cssClass == null)"
           :key="item.value"
@@ -51,6 +51,16 @@ export default {
       unmatchArray: [], // 记录未匹配的项
     }
   },
+  methods: {
+    /** 数据库存 dict_code、词典 dictValue 未同步时，用 raw.dictCode 与行值对齐 */
+    optionMatchesValue(item, cellVal) {
+      if (cellVal == null || cellVal === '') return false
+      if (cellVal == item.value) return true
+      const raw = item.raw
+      if (raw && raw.dictCode != null && String(raw.dictCode) === String(cellVal)) return true
+      return false
+    }
+  },
   computed: {
     values() {
       if (this.value === null || typeof this.value === 'undefined' || this.value === '') return []
@@ -63,7 +73,7 @@ export default {
       // 传入值为数组
       let unmatch = false // 添加一个标志来判断是否有未匹配项
       this.values.forEach(item => {
-        if (!this.options.some(v => v.value === item)) {
+        if (!this.options.some(opt => this.optionMatchesValue(opt, item))) {
           this.unmatchArray.push(item)
           unmatch = true // 如果有未匹配项，将标志设置为true
         }

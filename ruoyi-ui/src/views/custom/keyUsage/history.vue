@@ -6,8 +6,8 @@
           value-format="yyyy-MM-dd" style="width:240px" />
       </el-form-item>
       <el-form-item label="使用科室" prop="useDept">
-        <el-select v-model="queryParams.useDept" placeholder="请选择" clearable filterable allow-create style="width:180px">
-          <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="dict.value" />
+        <el-select v-model="queryParams.useDept" placeholder="请选择" clearable filterable style="width:180px">
+          <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="parseDictCode(dict.value)" />
         </el-select>
       </el-form-item>
       <el-form-item label="修改人" prop="changeBy">
@@ -45,7 +45,8 @@
       </el-table-column>
       <el-table-column label="使用科室" align="center" min-width="110" show-overflow-tooltip>
         <template slot-scope="scope">
-          <span>{{ useDeptHist(scope.row) }}</span>
+          <dict-tag v-if="deptHistTagValue(scope.row)" :options="dict.type.cst_use_dept" :value="deptHistTagValue(scope.row)" />
+          <span v-else>—</span>
         </template>
       </el-table-column>
       <el-table-column label="工作时间" align="center" width="110">
@@ -88,14 +89,16 @@
           <el-table-column label="修改前" min-width="160" align="center">
             <template slot-scope="scope">
               <div class="hist-cell-inner">
-                <span>{{ formatKeyValue(scope.row.key, scope.row.before) }}</span>
+                <dict-tag v-if="scope.row.key === 'useDept'" :options="dict.type.cst_use_dept" :value="scope.row.before" />
+                <span v-else>{{ formatKeyValue(scope.row.key, scope.row.before) }}</span>
               </div>
             </template>
           </el-table-column>
           <el-table-column label="修改后" min-width="160" align="center">
             <template slot-scope="scope">
               <div class="hist-cell-inner">
-                <span>{{ formatKeyValue(scope.row.key, scope.row.after) }}</span>
+                <dict-tag v-if="scope.row.key === 'useDept'" :options="dict.type.cst_use_dept" :value="scope.row.after" />
+                <span v-else>{{ formatKeyValue(scope.row.key, scope.row.after) }}</span>
               </div>
             </template>
           </el-table-column>
@@ -199,11 +202,16 @@ export default {
       const p = row.params || {}
       return p.reporterNick != null && p.reporterNick !== '' ? p.reporterNick : '—'
     },
-    useDeptHist(row) {
+    deptHistTagValue(row) {
       const j = this.snapKey(row).useDept
       if (j != null && j !== '') return j
       const p = row.params || {}
-      return p.useDeptDisplay != null && p.useDeptDisplay !== '' ? p.useDeptDisplay : '—'
+      const d = p.useDeptDisplay
+      return d != null && d !== '' ? d : null
+    },
+    parseDictCode(v) {
+      const n = Number(v)
+      return Number.isFinite(n) ? n : v
     },
     reportDateFromRow(row) {
       const o = this.snapKey(row)

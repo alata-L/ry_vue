@@ -10,8 +10,8 @@
         </el-select>
       </el-form-item>
       <el-form-item label="使用科室" prop="useDept">
-        <el-select v-model="queryParams.useDept" placeholder="请选择" clearable filterable allow-create>
-          <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="dict.value" />
+        <el-select v-model="queryParams.useDept" placeholder="请选择" clearable filterable>
+          <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="parseDictCode(dict.value)" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -46,7 +46,11 @@
           <dict-tag :options="dict.type.cst_life_equip_type" :value="scope.row.equipType"/>
         </template>
       </el-table-column>
-      <el-table-column label="使用科室" align="center" prop="useDept" min-width="120" show-overflow-tooltip />
+      <el-table-column label="使用科室" align="center" prop="useDept" min-width="120" show-overflow-tooltip>
+        <template slot-scope="scope">
+          <dict-tag :options="dict.type.cst_use_dept" :value="scope.row.useDept" />
+        </template>
+      </el-table-column>
       <el-table-column label="当日使用台数" align="center" prop="usedCount" width="110" />
       <el-table-column label="操作" align="center" width="140" class-name="small-padding fixed-width">
         <template slot-scope="scope">
@@ -69,8 +73,8 @@
           </el-select>
         </el-form-item>
         <el-form-item label="使用科室" prop="useDept">
-          <el-select v-model="form.useDept" placeholder="请选择或输入使用科室" filterable allow-create style="width:100%">
-            <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="dict.value" />
+          <el-select v-model="form.useDept" placeholder="请选择使用科室" filterable style="width:100%">
+            <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="parseDictCode(dict.value)" />
           </el-select>
         </el-form-item>
         <el-form-item label="当日使用台数" prop="usedCount">
@@ -121,6 +125,10 @@ export default {
     this.getList()
   },
   methods: {
+    parseDictCode(v) {
+      const n = Number(v)
+      return Number.isFinite(n) ? n : v
+    },
     /** 上报人展示：后端写入 row.params.createByNickName，兼容旧字段 */
     reporterNick(row) {
       const p = row && row.params
@@ -167,7 +175,9 @@ export default {
       // 如果当前登录用户有所属科室，自动填充使用科室
       getInfo().then(res => {
         if (res.user && res.user.useDept) {
-          this.form.useDept = res.user.useDept
+          const first = String(res.user.useDept).split(',')[0].trim()
+          const n = Number(first)
+          this.form.useDept = Number.isFinite(n) ? n : first
         }
       })
       this.open = true

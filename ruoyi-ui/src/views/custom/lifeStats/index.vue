@@ -46,7 +46,7 @@
           <el-table :data="getTableDataByType('1')" border size="small" class="mt16">
             <el-table-column label="使用科室" prop="useDept" min-width="140">
               <template slot-scope="scope">
-                <el-link type="primary" :underline="false" @click="goDeptDetail(scope.row.useDept)">{{ scope.row.useDept }}</el-link>
+                <el-link type="primary" :underline="false" @click="goDeptDetail(scope.row.useDept)">{{ useDeptLabel(scope.row.useDept) }}</el-link>
               </template>
             </el-table-column>
             <el-table-column label="6年以下" prop="cnt0" width="100" align="right" />
@@ -98,7 +98,7 @@
           <el-table :data="getTableDataByType('2')" border size="small" class="mt16">
             <el-table-column label="使用科室" prop="useDept" min-width="140">
               <template slot-scope="scope">
-                <el-link type="primary" :underline="false" @click="goDeptDetail(scope.row.useDept)">{{ scope.row.useDept }}</el-link>
+                <el-link type="primary" :underline="false" @click="goDeptDetail(scope.row.useDept)">{{ useDeptLabel(scope.row.useDept) }}</el-link>
               </template>
             </el-table-column>
             <el-table-column label="6年以下" prop="cnt0" width="100" align="right" />
@@ -150,7 +150,7 @@
           <el-table :data="getTableDataByType('3')" border size="small" class="mt16">
             <el-table-column label="使用科室" prop="useDept" min-width="140">
               <template slot-scope="scope">
-                <el-link type="primary" :underline="false" @click="goDeptDetail(scope.row.useDept)">{{ scope.row.useDept }}</el-link>
+                <el-link type="primary" :underline="false" @click="goDeptDetail(scope.row.useDept)">{{ useDeptLabel(scope.row.useDept) }}</el-link>
               </template>
             </el-table-column>
             <el-table-column label="6年以下" prop="cnt0" width="100" align="right" />
@@ -169,7 +169,7 @@ import { statsYears, statsYearsByType, statsDeptType } from '@/api/custom/lifeEq
 
 export default {
   name: 'LifeStats',
-  dicts: ['cst_life_equip_type'],
+  dicts: ['cst_life_equip_type', 'cst_use_dept'],
   data() {
     return {
       activeTab: '1',
@@ -186,6 +186,9 @@ export default {
     this.loadYearsAll()
   },
   methods: {
+    useDeptLabel(code) {
+      return this.selectDictLabel(this.dict.label.cst_use_dept, code) || code || ''
+    },
     // 按设备类型获取统计汇总
     getSummaryByType(equipType) {
       const list6 = (this.years6ListByType || []).filter(r => r.equipType === equipType)

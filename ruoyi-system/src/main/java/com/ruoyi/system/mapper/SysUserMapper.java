@@ -21,6 +21,11 @@ public interface SysUserMapper
     public List<SysUser> selectUserList(SysUser sysUser);
 
     /**
+     * 用户列表总数（与 selectUserList 同一 WHERE；供 PageHelper 使用，避免自动 COUNT 解析出错）
+     */
+    public Long selectUserList_COUNT(SysUser sysUser);
+
+    /**
      * 根据条件分页查询已配用户角色列表
      * 
      * @param user 用户信息

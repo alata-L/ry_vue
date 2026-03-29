@@ -27,7 +27,10 @@ public class SysUser extends BaseEntity
     /** 部门ID */
     private Long deptId;
 
-    /** 所属科室(词典cst_use_dept) */
+    /**
+     * 所属科室（冗余）：逗号分隔的 dict_code，与 {@code sys_user_use_dept} 同步写入，仅用于导出、列表展示、
+     * 兼容旧代码读取；业务上“用户有哪些使用科室”以关联表 {@code sys_user_use_dept} 为准。
+     */
     @Excel(name = "所属科室", dictType = "cst_use_dept")
     private String useDept;
 
@@ -86,6 +89,9 @@ public class SysUser extends BaseEntity
 
     /** 岗位组 */
     private Long[] postIds;
+
+    /** 所属科室(词典 cst_use_dept)多选，对应 sys_dict_data.dict_code；与 roleIds 同为 Long[]，便于 JSON 数组与 Jackson 绑定一致 */
+    private Long[] deptDictCodes;
 
     /** 角色ID */
     private Long roleId;
@@ -306,6 +312,16 @@ public class SysUser extends BaseEntity
     public void setPostIds(Long[] postIds)
     {
         this.postIds = postIds;
+    }
+
+    public Long[] getDeptDictCodes()
+    {
+        return deptDictCodes;
+    }
+
+    public void setDeptDictCodes(Long[] deptDictCodes)
+    {
+        this.deptDictCodes = deptDictCodes;
     }
 
     public Long getRoleId()

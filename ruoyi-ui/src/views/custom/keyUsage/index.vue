@@ -5,8 +5,8 @@
         <el-date-picker v-model="queryParams.reportDate" type="date" value-format="yyyy-MM-dd" placeholder="选择日期" style="width:140px"></el-date-picker>
       </el-form-item>
       <el-form-item label="使用科室" prop="useDept">
-        <el-select v-model="queryParams.useDept" placeholder="请选择" clearable filterable allow-create style="width:180px">
-          <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="dict.value" />
+        <el-select v-model="queryParams.useDept" placeholder="请选择" clearable filterable style="width:180px">
+          <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="parseDictCode(dict.value)" />
         </el-select>
       </el-form-item>
       <el-form-item label="设备描述" prop="equipDesc">
@@ -41,7 +41,11 @@
       </el-table-column>
       <el-table-column label="设备编号" align="center" prop="equipNo" min-width="100" />
       <el-table-column label="设备描述" align="center" prop="equipDesc" min-width="140" show-overflow-tooltip />
-      <el-table-column label="使用科室" align="center" prop="useDept" min-width="120" show-overflow-tooltip />
+      <el-table-column label="使用科室" align="center" prop="useDept" min-width="120" show-overflow-tooltip>
+        <template slot-scope="scope">
+          <dict-tag :options="dict.type.cst_use_dept" :value="scope.row.useDept" />
+        </template>
+      </el-table-column>
       <el-table-column label="工作时间" align="center" prop="workHours" width="120" />
       <el-table-column label="每周工作天数" align="center" prop="weekWorkDays" width="120" />
       <el-table-column label="日均服务例数" align="center" prop="treatCount" width="120" />
@@ -60,7 +64,7 @@
       <el-form ref="form" :model="form" :rules="rules" label-width="120px">
         <el-form-item label="使用科室" prop="useDept">
           <el-select v-model="form.useDept" placeholder="请先选择使用科室" clearable filterable style="width:100%" @change="onUseDeptChange">
-            <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="dict.value" />
+            <el-option v-for="dict in dict.type.cst_use_dept" :key="dict.value" :label="dict.label" :value="parseDictCode(dict.value)" />
           </el-select>
         </el-form-item>
         <el-form-item label="重点设备" prop="equipId">
@@ -127,6 +131,10 @@ export default {
     this.getList()
   },
   methods: {
+    parseDictCode(v) {
+      const n = Number(v)
+      return Number.isFinite(n) ? n : v
+    },
     /** 上报人展示：后端写入 row.params.createByNickName，兼容旧字段 */
     reporterNick(row) {
       const p = row && row.params
@@ -187,7 +195,9 @@ export default {
       // 如果当前登录用户有所属科室，自动填充使用科室并加载设备列表
       getInfo().then(res => {
         if (res.user && res.user.useDept) {
-          this.form.useDept = res.user.useDept
+          const first = String(res.user.useDept).split(',')[0].trim()
+          const n = Number(first)
+          this.form.useDept = Number.isFinite(n) ? n : first
           this.onUseDeptChange()
         }
       })

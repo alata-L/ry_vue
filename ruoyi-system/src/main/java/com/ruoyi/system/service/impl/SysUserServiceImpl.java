@@ -1,8 +1,10 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.Validator;
 import org.slf4j.Logger;
@@ -23,11 +25,13 @@ import com.ruoyi.common.utils.spring.SpringUtils;
 import com.ruoyi.system.domain.SysPost;
 import com.ruoyi.system.domain.SysUserPost;
 import com.ruoyi.system.domain.SysUserRole;
+import com.ruoyi.system.domain.SysUserUseDept;
 import com.ruoyi.system.mapper.SysPostMapper;
 import com.ruoyi.system.mapper.SysRoleMapper;
 import com.ruoyi.system.mapper.SysUserMapper;
 import com.ruoyi.system.mapper.SysUserPostMapper;
 import com.ruoyi.system.mapper.SysUserRoleMapper;
+import com.ruoyi.system.mapper.SysUserUseDeptMapper;
 import com.ruoyi.system.service.ISysConfigService;
 import com.ruoyi.system.service.ISysDeptService;
 import com.ruoyi.system.service.ISysUserService;
@@ -58,6 +62,9 @@ public class SysUserServiceImpl implements ISysUserService
     private SysUserPostMapper userPostMapper;
 
     @Autowired
+    private SysUserUseDeptMapper userUseDeptMapper;
+
+    @Autowired
     private ISysConfigService configService;
 
     @Autowired
@@ -73,7 +80,8 @@ public class SysUserServiceImpl implements ISysUserService
      * @return 用户信息集合信息
      */
     @Override
-    @DataScope(deptAlias = "d", userAlias = "u")
+    /** 数据权限走 sys_user.u.dept_id；列表 SQL 不再 join sys_dept（所属科室以 use_dept / sys_user_use_dept 为准） */
+    @DataScope(deptAlias = "u", userAlias = "u")
     public List<SysUser> selectUserList(SysUser user)
     {
         List<SysUser> list = userMapper.selectUserList(user);
@@ -134,7 +142,115 @@ public class SysUserServiceImpl implements ISysUserService
     @Override
     public SysUser selectUserById(Long userId)
     {
-        return userMapper.selectUserById(userId);
+        SysUser user = userMapper.selectUserById(userId);
+        if (user != null)
+        {
+            List<Long> codes = userUseDeptMapper.selectDeptDictCodesByUserId(userId);
+            if (codes != null && !codes.isEmpty())
+            {
+                user.setDeptDictCodes(codes.toArray(new Long[0]));
+            }
+            else
+            {
+                fillDeptDictCodesFromUseDeptString(user);
+            }
+        }
+        return user;
+    }
+
+    /** 将 use_dept 逗号分隔的词典编码解析为 deptDictCodes（兼容未建关联表或旧数据） */
+    private void fillDeptDictCodesFromUseDeptString(SysUser user)
+    {
+        if (user == null || StringUtils.isEmpty(user.getUseDept()))
+        {
+            return;
+        }
+        String[] parts = user.getUseDept().split(",");
+        List<Long> ids = new ArrayList<>();
+        for (String p : parts)
+        {
+            String t = p == null ? "" : p.trim();
+            if (StringUtils.isEmpty(t))
+            {
+                continue;
+            }
+            try
+            {
+                ids.add(Long.parseLong(t));
+            }
+            catch (NumberFormatException ignored)
+            {
+            }
+        }
+        if (!ids.isEmpty())
+        {
+            user.setDeptDictCodes(ids.toArray(new Long[0]));
+        }
+    }
+
+    /** 请求体优先使用 deptDictCodes（含空数组表示清空）；为 null 时回退解析 use_dept 字符串（导入等场景） */
+    private void mergeDeptDictCodesFromRequest(SysUser user)
+    {
+        if (user.getDeptDictCodes() == null)
+        {
+            fillDeptDictCodesFromUseDeptString(user);
+        }
+        // 以 deptDictCodes 为准生成冗余列 use_dept（与即将写入的 sys_user_use_dept 一致）
+        syncUseDeptStringFromDeptDictCodes(user);
+    }
+
+    private void syncUseDeptStringFromDeptDictCodes(SysUser user)
+    {
+        if (user.getDeptDictCodes() == null || user.getDeptDictCodes().length == 0)
+        {
+            user.setUseDept("");
+            return;
+        }
+        String s = Arrays.stream(user.getDeptDictCodes()).filter(Objects::nonNull).distinct().sorted()
+            .map(String::valueOf).collect(Collectors.joining(","));
+        user.setUseDept(s);
+    }
+
+    /** 新增用户与使用科室关联（与 insertUserRole 相同模式：仅批量插入，调用方须先 deleteUserUseDeptByUserId） */
+    private void insertUserUseDept(SysUser user)
+    {
+        insertUserUseDept(user.getUserId(), user.getDeptDictCodes());
+    }
+
+    private void insertUserUseDept(Long userId, Long[] deptDictCodes)
+    {
+        if (StringUtils.isEmpty(deptDictCodes))
+        {
+            return;
+        }
+        List<SysUserUseDept> list = new ArrayList<>(deptDictCodes.length);
+        for (Long code : deptDictCodes)
+        {
+            if (code == null)
+            {
+                continue;
+            }
+            SysUserUseDept row = new SysUserUseDept();
+            row.setUserId(userId);
+            row.setDeptDictCode(code);
+            list.add(row);
+        }
+        userUseDeptMapper.batchUserUseDept(list);
+    }
+
+    /**
+     * 修改用户：先写关联表（多科室事实来源），再更新 sys_user（含冗余 use_dept）。
+     */
+    private int updateUserCore(SysUser user)
+    {
+        Long userId = user.getUserId();
+        userRoleMapper.deleteUserRoleByUserId(userId);
+        insertUserRole(user);
+        userPostMapper.deleteUserPostByUserId(userId);
+        insertUserPost(user);
+        userUseDeptMapper.deleteUserUseDeptByUserId(userId);
+        insertUserUseDept(user);
+        return userMapper.updateUser(user);
     }
 
     /**
@@ -269,12 +385,15 @@ public class SysUserServiceImpl implements ISysUserService
     @Transactional
     public int insertUser(SysUser user)
     {
+        mergeDeptDictCodesFromRequest(user);
         // 新增用户信息
         int rows = userMapper.insertUser(user);
         // 新增用户岗位关联
         insertUserPost(user);
         // 新增用户与角色管理
         insertUserRole(user);
+        userUseDeptMapper.deleteUserUseDeptByUserId(user.getUserId());
+        insertUserUseDept(user);
         return rows;
     }
 
@@ -300,16 +419,8 @@ public class SysUserServiceImpl implements ISysUserService
     @Transactional
     public int updateUser(SysUser user)
     {
-        Long userId = user.getUserId();
-        // 删除用户与角色关联
-        userRoleMapper.deleteUserRoleByUserId(userId);
-        // 新增用户与角色管理
-        insertUserRole(user);
-        // 删除用户与岗位关联
-        userPostMapper.deleteUserPostByUserId(userId);
-        // 新增用户与岗位管理
-        insertUserPost(user);
-        return userMapper.updateUser(user);
+        mergeDeptDictCodesFromRequest(user);
+        return updateUserCore(user);
     }
 
     /**
@@ -471,6 +582,7 @@ public class SysUserServiceImpl implements ISysUserService
         userRoleMapper.deleteUserRoleByUserId(userId);
         // 删除用户与岗位表
         userPostMapper.deleteUserPostByUserId(userId);
+        userUseDeptMapper.deleteUserUseDeptByUserId(userId);
         return userMapper.deleteUserById(userId);
     }
 
@@ -493,6 +605,7 @@ public class SysUserServiceImpl implements ISysUserService
         userRoleMapper.deleteUserRole(userIds);
         // 删除用户与岗位关联
         userPostMapper.deleteUserPost(userIds);
+        userUseDeptMapper.deleteUserUseDept(userIds);
         return userMapper.deleteUserByIds(userIds);
     }
 
@@ -531,7 +644,10 @@ public class SysUserServiceImpl implements ISysUserService
                     String password = configService.selectConfigByKey("sys.user.initPassword");
                     user.setPassword(SecurityUtils.encryptPassword(password));
                     user.setCreateBy(operName);
+                    mergeDeptDictCodesFromRequest(user);
                     userMapper.insertUser(user);
+                    userUseDeptMapper.deleteUserUseDeptByUserId(user.getUserId());
+                    insertUserUseDept(user);
                     successNum++;
                     successMsg.append("<br/>" + successNum + "、账号 " + user.getUserName() + " 导入成功");
                 }
@@ -546,6 +662,9 @@ public class SysUserServiceImpl implements ISysUserService
                     user.setUserId(u.getUserId());
                     user.setDeptId(u.getDeptId());
                     user.setUpdateBy(operName);
+                    mergeDeptDictCodesFromRequest(user);
+                    userUseDeptMapper.deleteUserUseDeptByUserId(user.getUserId());
+                    insertUserUseDept(user);
                     userMapper.updateUser(user);
                     successNum++;
                     successMsg.append("<br/>" + successNum + "、账号 " + user.getUserName() + " 更新成功");

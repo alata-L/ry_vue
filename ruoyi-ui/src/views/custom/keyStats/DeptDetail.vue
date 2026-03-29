@@ -88,6 +88,7 @@ require('echarts/theme/macarons')
 
 export default {
   name: 'KeyStatsDeptDetail',
+  dicts: ['cst_use_dept'],
   data() {
     return {
       useDept: '',
@@ -104,7 +105,9 @@ export default {
   },
   computed: {
     pageTitle() {
-      return this.useDept ? `${this.useDept} - 重点设备统计` : '科室重点设备统计'
+      if (!this.useDept) return '科室重点设备统计'
+      const label = this.selectDictLabel(this.dict.label.cst_use_dept, this.useDept) || this.useDept
+      return `${label} - 重点设备统计`
     }
   },
   watch: {
