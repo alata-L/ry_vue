@@ -79,4 +79,16 @@ public class CstKeyStatsController extends BaseController {
         );
         return success(data);
     }
+
+    /** 首页：按价格范围筛选的今年 TOP N 设备收费 vs 去年全年收费（柱状对比） */
+    @PreAuthorize("@ss.hasPermi('custom:keyEquip:list')")
+    @GetMapping("/topEquipChargeYearCompare")
+    public AjaxResult topEquipChargeYearCompare(
+            @RequestParam(required = false, defaultValue = "500000") Long minValue,
+            @RequestParam(required = false, defaultValue = "10") Integer limit) {
+        List<Map<String, Object>> list = cstKeyStatsService.getTopEquipChargeYearCompareByValue(
+            minValue != null ? minValue : 500000L,
+            limit != null ? limit : 10);
+        return success(list);
+    }
 }

@@ -52,4 +52,7 @@ public interface CstKeyEquipUsageMapper {
 
     /** TOP10设备按月序列（收费、工作时长、诊疗例数），返回 period/totalCharge/totalWorkHours/totalTreat */
     List<Map<String, Object>> topEquipMonthlySeries(@Param("start") String start, @Param("end") String end, @Param("minValue") Long minValue, @Param("equipIds") List<Long> equipIds);
+
+    /** 指定日期范围内，按设备汇总收费/工作时长/诊疗例数（给定设备 ID），返回 equipId/totalCharge/totalWorkHours/totalTreat */
+    List<Map<String, Object>> sumChargeByEquipIdsInRange(@Param("start") String start, @Param("end") String end, @Param("equipIds") List<Long> equipIds);
 }

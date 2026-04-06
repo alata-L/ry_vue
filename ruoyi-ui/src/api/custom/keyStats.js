@@ -51,3 +51,12 @@ export function getTopEquipSeriesByValue(minValue, limit) {
     params: { minValue: minValue || 500000, limit: limit || 10 }
   })
 }
+
+/** 首页：TOP N 设备今年收费 vs 去年收费（按设备行，用于柱状图） */
+export function getTopEquipChargeYearCompare(minValue, limit) {
+  return request({
+    url: '/custom/keyStats/topEquipChargeYearCompare',
+    method: 'get',
+    params: { minValue: minValue || 500000, limit: limit || 10 }
+  })
+}

@@ -199,4 +199,21 @@
         group by date_format(u.report_date, '%Y-%m')
         order by period
     </select>
+
+    <!-- 指定日期范围内，按设备汇总收费/工作时长/诊疗例数（给定设备 ID 列表） -->
+    <select id="sumChargeByEquipIdsInRange" resultType="map">
+        select u.equip_id as equipId,
+               ifnull(sum(u.treat_count * u.unit_charge_price), 0) as totalCharge,
+               ifnull(sum(u.work_hours), 0) as totalWorkHours,
+               ifnull(sum(u.treat_count), 0) as totalTreat
+        from cst_key_equip_usage u
+        join cst_key_equip e on u.equip_id = e.id
+        where u.report_date &gt;= #{start} and u.report_date &lt;= #{end}
+          and e.status = '0'
+          and e.id in
+        <foreach collection="equipIds" item="equipId" open="(" separator="," close=")">
+            #{equipId}
+        </foreach>
+        group by u.equip_id
+    </select>
 </mapper>

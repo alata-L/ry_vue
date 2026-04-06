@@ -36,13 +36,13 @@
       <el-row :gutter="16" class="chart-row">
         <el-col :xs="24" :lg="12">
           <el-card shadow="hover" class="chart-card">
-            <div slot="header" class="chart-title">收费趋势（今年 vs 去年）<br/>单价50万元以上TOP10</div>
+            <div slot="header" class="chart-title">收费对比（今年 vs 去年）<br/>单价50万元以上TOP10（按设备名称）</div>
             <div ref="chartCharge50" class="chart-container" />
           </el-card>
         </el-col>
         <el-col :xs="24" :lg="12">
           <el-card shadow="hover" class="chart-card">
-            <div slot="header" class="chart-title">收费趋势（今年 vs 去年）<br/>单价100万元以上TOP10</div>
+            <div slot="header" class="chart-title">收费对比（今年 vs 去年）<br/>单价100万元以上TOP10（按设备名称）</div>
             <div ref="chartCharge100" class="chart-container" />
           </el-card>
         </el-col>
@@ -50,13 +50,13 @@
       <el-row :gutter="16" class="chart-row">
         <el-col :xs="24" :lg="12">
           <el-card shadow="hover" class="chart-card">
-            <div slot="header" class="chart-title">工作时长趋势（今年 vs 去年）<br/>单价50万元以上TOP10</div>
+            <div slot="header" class="chart-title">工作时长对比（今年 vs 去年）<br/>单价50万元以上TOP10（按设备名称）</div>
             <div ref="chartWorkHours50" class="chart-container" />
           </el-card>
         </el-col>
         <el-col :xs="24" :lg="12">
           <el-card shadow="hover" class="chart-card">
-            <div slot="header" class="chart-title">工作时长趋势（今年 vs 去年）<br/>单价100万元以上TOP10</div>
+            <div slot="header" class="chart-title">工作时长对比（今年 vs 去年）<br/>单价100万元以上TOP10（按设备名称）</div>
             <div ref="chartWorkHours100" class="chart-container" />
           </el-card>
         </el-col>
@@ -64,13 +64,13 @@
       <el-row :gutter="16" class="chart-row">
         <el-col :xs="24" :lg="12">
           <el-card shadow="hover" class="chart-card">
-            <div slot="header" class="chart-title">诊疗例数趋势（今年 vs 去年）<br/>单价50万元以上TOP10</div>
+            <div slot="header" class="chart-title">诊疗例数对比（今年 vs 去年）<br/>单价50万元以上TOP10（按设备名称）</div>
             <div ref="chartTreat50" class="chart-container" />
           </el-card>
         </el-col>
         <el-col :xs="24" :lg="12">
           <el-card shadow="hover" class="chart-card">
-            <div slot="header" class="chart-title">诊疗例数趋势（今年 vs 去年）<br/>单价100万元以上TOP10</div>
+            <div slot="header" class="chart-title">诊疗例数对比（今年 vs 去年）<br/>单价100万元以上TOP10（按设备名称）</div>
             <div ref="chartTreat100" class="chart-container" />
           </el-card>
         </el-col>
@@ -83,7 +83,7 @@
 import * as echarts from 'echarts'
 require('echarts/theme/macarons')
 import resize from './dashboard/mixins/resize'
-import { getKeyStatsSummary, getTopEquipSeriesByValue } from '@/api/custom/keyStats'
+import { getKeyStatsSummary, getTopEquipChargeYearCompare } from '@/api/custom/keyStats'
 
 export default {
   name: 'Index',
@@ -96,14 +96,9 @@ export default {
         equipCount100: 0,
         totalValue100: 0
       },
-      seriesData50: {
-        thisYear: [],
-        lastYear: []
-      },
-      seriesData100: {
-        thisYear: [],
-        lastYear: []
-      },
+      /** ≥50万 / ≥100万：TOP10 设备今年/去年（收费、工作时长、诊疗例数，柱状图共用同一批数据） */
+      compare50: [],
+      compare100: [],
       chartCharge50: null,
       chartCharge100: null,
       chartWorkHours50: null,
@@ -137,70 +132,55 @@ export default {
     loadData() {
       Promise.allSettled([
         getKeyStatsSummary(),
-        getTopEquipSeriesByValue(500000, 10),
-        getTopEquipSeriesByValue(1000000, 10)
+        getTopEquipChargeYearCompare(500000, 10),
+        getTopEquipChargeYearCompare(1000000, 10)
       ]).then(([r0, r1, r2]) => {
         if (r0.status === 'fulfilled' && r0.value.data) {
           const data = r0.value.data
           this.summary = data.summary || this.summary
         }
         if (r1.status === 'fulfilled' && r1.value.data) {
-          const series = r1.value.data
-          this.seriesData50.thisYear = series.thisYear || []
-          this.seriesData50.lastYear = series.lastYear || []
+          this.compare50 = Array.isArray(r1.value.data) ? r1.value.data : []
         }
         if (r2.status === 'fulfilled' && r2.value.data) {
-          const series = r2.value.data
-          this.seriesData100.thisYear = series.thisYear || []
-          this.seriesData100.lastYear = series.lastYear || []
+          this.compare100 = Array.isArray(r2.value.data) ? r2.value.data : []
         }
         this.$nextTick(() => this.initCharts())
       })
     },
     initCharts() {
-      const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
-      
-      // 50万元以上数据
-      const thisYearCharge50 = this.buildMonthlyValues(this.seriesData50.thisYear, 'totalCharge', 12)
-      const lastYearCharge50 = this.buildMonthlyValues(this.seriesData50.lastYear, 'totalCharge', 12)
-      const thisYearWorkHours50 = this.buildMonthlyValues(this.seriesData50.thisYear, 'totalWorkHours', 12)
-      const lastYearWorkHours50 = this.buildMonthlyValues(this.seriesData50.lastYear, 'totalWorkHours', 12)
-      const thisYearTreat50 = this.buildMonthlyValues(this.seriesData50.thisYear, 'totalTreat', 12)
-      const lastYearTreat50 = this.buildMonthlyValues(this.seriesData50.lastYear, 'totalTreat', 12)
-
-      // 100万元以上数据
-      const thisYearCharge100 = this.buildMonthlyValues(this.seriesData100.thisYear, 'totalCharge', 12)
-      const lastYearCharge100 = this.buildMonthlyValues(this.seriesData100.lastYear, 'totalCharge', 12)
-      const thisYearWorkHours100 = this.buildMonthlyValues(this.seriesData100.thisYear, 'totalWorkHours', 12)
-      const lastYearWorkHours100 = this.buildMonthlyValues(this.seriesData100.lastYear, 'totalWorkHours', 12)
-      const thisYearTreat100 = this.buildMonthlyValues(this.seriesData100.thisYear, 'totalTreat', 12)
-      const lastYearTreat100 = this.buildMonthlyValues(this.seriesData100.lastYear, 'totalTreat', 12)
-
-      this.initChargeChart(months, thisYearCharge50, lastYearCharge50, 'chartCharge50', '收费', '元')
-      this.initChargeChart(months, thisYearCharge100, lastYearCharge100, 'chartCharge100', '收费', '元')
-      this.initWorkHoursChart(months, thisYearWorkHours50, lastYearWorkHours50, 'chartWorkHours50')
-      this.initWorkHoursChart(months, thisYearWorkHours100, lastYearWorkHours100, 'chartWorkHours100')
-      this.initTreatChart(months, thisYearTreat50, lastYearTreat50, 'chartTreat50')
-      this.initTreatChart(months, thisYearTreat100, lastYearTreat100, 'chartTreat100')
+      this.initBarCompareByEquip(this.compare50, 'chartCharge50', 'chargeLastYear', 'chargeThisYear', '元')
+      this.initBarCompareByEquip(this.compare100, 'chartCharge100', 'chargeLastYear', 'chargeThisYear', '元')
+      this.initBarCompareByEquip(this.compare50, 'chartWorkHours50', 'workHoursLastYear', 'workHoursThisYear', '小时')
+      this.initBarCompareByEquip(this.compare100, 'chartWorkHours100', 'workHoursLastYear', 'workHoursThisYear', '小时')
+      this.initBarCompareByEquip(this.compare50, 'chartTreat50', 'treatLastYear', 'treatThisYear', '例')
+      this.initBarCompareByEquip(this.compare100, 'chartTreat100', 'treatLastYear', 'treatThisYear', '例')
     },
-    buildMonthlyValues(list, field, length) {
-      const arr = new Array(length).fill(null)
-      if (!list || !list.length) return arr
-      for (let i = 0; i < list.length && i < length; i++) {
-        const v = list[i][field]
-        arr[i] = v != null ? Number(v) : 0
-      }
-      return arr
-    },
-    initChargeChart(xAxisData, thisYearData, lastYearData, refName, label, unit) {
+    /** TOP10 设备名称横轴，分组柱（左去年、右今年）；unit 为 tooltip 后缀 */
+    initBarCompareByEquip(rows, refName, lastField, thisField, unit) {
       const el = this.$refs[refName]
       if (!el) return
       if (this[refName]) this[refName].dispose()
       this[refName] = echarts.init(el, 'macarons')
+      const list = rows || []
+      const categories = list.map(r => {
+        const d = r.equipDesc != null ? String(r.equipDesc).trim() : ''
+        if (d) return d
+        const n = r.equipNo != null ? String(r.equipNo).trim() : ''
+        return n || '—'
+      })
+      const lastYearData = list.map(r => {
+        const v = r[lastField]
+        return v != null ? Number(v) : 0
+      })
+      const thisYearData = list.map(r => {
+        const v = r[thisField]
+        return v != null ? Number(v) : 0
+      })
       this[refName].setOption({
         tooltip: {
           trigger: 'axis',
-          axisPointer: { type: 'cross' },
+          axisPointer: { type: 'shadow' },
           formatter: function(params) {
             if (!params || !params.length) return ''
             let s = params[0].axisValue + '<br/>'
@@ -211,71 +191,18 @@ export default {
             return s
           }
         },
-        legend: { data: ['今年', '去年'], bottom: 0 },
-        grid: { left: '3%', right: '4%', bottom: '15%', top: '10%', containLabel: true },
-        xAxis: { type: 'category', boundaryGap: false, data: xAxisData, axisTick: { show: false } },
+        legend: { data: ['去年', '今年'], bottom: 0 },
+        grid: { left: '3%', right: '4%', bottom: '18%', top: '10%', containLabel: true },
+        xAxis: {
+          type: 'category',
+          data: categories,
+          axisTick: { show: false },
+          axisLabel: { interval: 0, rotate: 28, fontSize: 11 }
+        },
         yAxis: { type: 'value', axisTick: { show: false }, axisLabel: { formatter: '{value}' } },
         series: [
-          { name: '今年', type: 'line', smooth: true, data: thisYearData, itemStyle: { color: '#409EFF' }, lineStyle: { width: 2 } },
-          { name: '去年', type: 'line', smooth: true, data: lastYearData, itemStyle: { color: '#E6A23C' }, lineStyle: { width: 2 } }
-        ]
-      })
-    },
-    initWorkHoursChart(xAxisData, thisYearData, lastYearData, refName) {
-      const el = this.$refs[refName]
-      if (!el) return
-      if (this[refName]) this[refName].dispose()
-      this[refName] = echarts.init(el, 'macarons')
-      this[refName].setOption({
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: { type: 'cross' },
-          formatter: function(params) {
-            if (!params || !params.length) return ''
-            let s = params[0].axisValue + '<br/>'
-            params.forEach(p => {
-              const v = p.value != null ? Number(p.value).toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '-'
-              s += p.marker + ' ' + p.seriesName + ': ' + v + ' 小时<br/>'
-            })
-            return s
-          }
-        },
-        legend: { data: ['今年', '去年'], bottom: 0 },
-        grid: { left: '3%', right: '4%', bottom: '15%', top: '10%', containLabel: true },
-        xAxis: { type: 'category', boundaryGap: false, data: xAxisData, axisTick: { show: false } },
-        yAxis: { type: 'value', axisTick: { show: false }, axisLabel: { formatter: '{value}' } },
-        series: [
-          { name: '今年', type: 'line', smooth: true, data: thisYearData, itemStyle: { color: '#409EFF' }, lineStyle: { width: 2 } },
-          { name: '去年', type: 'line', smooth: true, data: lastYearData, itemStyle: { color: '#E6A23C' }, lineStyle: { width: 2 } }
-        ]
-      })
-    },
-    initTreatChart(xAxisData, thisYearData, lastYearData, refName) {
-      const el = this.$refs[refName]
-      if (!el) return
-      if (this[refName]) this[refName].dispose()
-      this[refName] = echarts.init(el, 'macarons')
-      this[refName].setOption({
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: { type: 'cross' },
-          formatter: function(params) {
-            if (!params || !params.length) return ''
-            let s = params[0].axisValue + '<br/>'
-            params.forEach(p => {
-              const v = p.value != null ? p.value : '-'
-              s += p.marker + ' ' + p.seriesName + ': ' + v + ' 例<br/>'
-            })
-            return s
-          }
-        },
-        legend: { data: ['今年', '去年'], bottom: 0 },
-        grid: { left: '3%', right: '4%', bottom: '15%', top: '10%', containLabel: true },
-        xAxis: { type: 'category', boundaryGap: false, data: xAxisData, axisTick: { show: false } },
-        yAxis: { type: 'value', axisTick: { show: false } },
-        series: [
-          { name: '今年', type: 'line', smooth: true, data: thisYearData, itemStyle: { color: '#409EFF' }, lineStyle: { width: 2 } },
-          { name: '去年', type: 'line', smooth: true, data: lastYearData, itemStyle: { color: '#E6A23C' }, lineStyle: { width: 2 } }
+          { name: '去年', type: 'bar', data: lastYearData, barMaxWidth: 32, itemStyle: { color: '#E6A23C' } },
+          { name: '今年', type: 'bar', data: thisYearData, barMaxWidth: 32, itemStyle: { color: '#409EFF' } }
         ]
       })
     },

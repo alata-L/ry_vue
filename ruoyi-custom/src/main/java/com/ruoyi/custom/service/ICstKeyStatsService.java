@@ -45,4 +45,11 @@ public interface ICstKeyStatsService {
      * 返回 key: thisYear / lastYear，value: List<Map> 每项 period(yyyy-MM), totalCharge, totalWorkHours, totalTreat
      */
     Map<String, List<Map<String, Object>>> getTopEquipMonthlySeriesByValue(Long minValue, int limit);
+
+    /**
+     * 首页：按价格范围筛选的今年收费 TOP N 设备，并附带各设备去年全年收费/工作时长/诊疗例数，用于柱状对比图。
+     * 每项: equipId, equipNo, equipDesc, useDept,
+     * chargeThisYear, chargeLastYear, workHoursThisYear, workHoursLastYear, treatThisYear, treatLastYear
+     */
+    List<Map<String, Object>> getTopEquipChargeYearCompareByValue(Long minValue, int limit);
 }

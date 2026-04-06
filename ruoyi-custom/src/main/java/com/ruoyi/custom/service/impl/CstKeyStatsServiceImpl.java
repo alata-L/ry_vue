@@ -310,6 +310,64 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
         return result;
     }
 
+    @Override
+    public List<Map<String, Object>> getTopEquipChargeYearCompareByValue(Long minValue, int limit) {
+        if (minValue == null) minValue = 500000L;
+        if (limit <= 0) limit = 10;
+        LocalDate now = LocalDate.now();
+        int year = now.getYear();
+        String thisYearStart = LocalDate.of(year, 1, 1).format(FMT);
+        String thisYearEnd = now.format(FMT);
+        String lastYearStart = LocalDate.of(year - 1, 1, 1).format(FMT);
+        String lastYearEnd = LocalDate.of(year - 1, 12, 31).format(FMT);
+
+        List<Map<String, Object>> topThisYear = cstKeyEquipUsageMapper.topEquipByChargeInRangeAndValue(
+            thisYearStart, thisYearEnd, minValue, limit);
+        if (topThisYear == null || topThisYear.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Long> equipIds = new ArrayList<>();
+        for (Map<String, Object> row : topThisYear) {
+            Object equipId = row.get("equipId");
+            if (equipId != null) {
+                equipIds.add(toLong(equipId));
+            }
+        }
+        List<Map<String, Object>> lastYearRows = cstKeyEquipUsageMapper.sumChargeByEquipIdsInRange(
+            lastYearStart, lastYearEnd, equipIds);
+        Map<Long, BigDecimal> lastYearCharge = new HashMap<>();
+        Map<Long, Long> lastYearWorkHours = new HashMap<>();
+        Map<Long, Long> lastYearTreat = new HashMap<>();
+        if (lastYearRows != null) {
+            for (Map<String, Object> r : lastYearRows) {
+                Long id = toLongObj(r.get("equipId"));
+                if (id != null) {
+                    lastYearCharge.put(id, toBigDecimal(r.get("totalCharge")));
+                    lastYearWorkHours.put(id, toLong(r.get("totalWorkHours")));
+                    lastYearTreat.put(id, toLong(r.get("totalTreat")));
+                }
+            }
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> row : topThisYear) {
+            Long id = toLongObj(row.get("equipId"));
+            Map<String, Object> m = new HashMap<>();
+            m.put("equipId", id);
+            m.put("equipNo", row.get("equipNo"));
+            m.put("equipDesc", row.get("equipDesc"));
+            m.put("useDept", row.get("useDept"));
+            m.put("chargeThisYear", toBigDecimal(row.get("totalCharge")));
+            m.put("chargeLastYear", id != null ? lastYearCharge.getOrDefault(id, BigDecimal.ZERO) : BigDecimal.ZERO);
+            m.put("workHoursThisYear", toLong(row.get("totalWorkHours")));
+            m.put("workHoursLastYear", id != null ? lastYearWorkHours.getOrDefault(id, 0L) : 0L);
+            m.put("treatThisYear", toLong(row.get("totalTreat")));
+            m.put("treatLastYear", id != null ? lastYearTreat.getOrDefault(id, 0L) : 0L);
+            result.add(m);
+        }
+        return result;
+    }
+
     private List<Map<String, Object>> buildFullYearSeries(List<Map<String, Object>> list, int year) {
         Map<String, Map<String, Object>> byPeriod = new HashMap<>();
         if (list != null) {
