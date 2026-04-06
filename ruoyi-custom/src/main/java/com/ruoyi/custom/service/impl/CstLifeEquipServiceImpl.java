@@ -8,6 +8,7 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.custom.domain.CstLifeEquip;
+import com.ruoyi.custom.domain.UseDeptScope;
 import com.ruoyi.custom.mapper.CstLifeEquipMapper;
 import com.ruoyi.custom.service.ICstLifeEquipService;
 
@@ -50,19 +51,33 @@ public class CstLifeEquipServiceImpl implements ICstLifeEquipService {
         return cstLifeEquipMapper.deleteCstLifeEquipByIds(ids);
     }
 
-    @Override
-    public List<Map<String, Object>> countByDeptAndType() {
-        return cstLifeEquipMapper.countByDeptAndType();
+    private static Boolean deniedFlag(UseDeptScope scope) {
+        if (scope.isUnrestricted()) {
+            return null;
+        }
+        return scope.isDenied() ? Boolean.TRUE : null;
+    }
+
+    private static List<String> useDeptListParam(UseDeptScope scope) {
+        if (scope.isUnrestricted() || scope.isDenied()) {
+            return null;
+        }
+        return scope.getUseDeptCodes();
     }
 
     @Override
-    public List<Map<String, Object>> countByYearsAndDept(int minYears) {
-        return cstLifeEquipMapper.countByYearsAndDept(minYears);
+    public List<Map<String, Object>> countByDeptAndType(UseDeptScope scope) {
+        return cstLifeEquipMapper.countByDeptAndType(deniedFlag(scope), useDeptListParam(scope));
     }
 
     @Override
-    public List<Map<String, Object>> countByYearsAndDeptAndType(int minYears) {
-        return cstLifeEquipMapper.countByYearsAndDeptAndType(minYears);
+    public List<Map<String, Object>> countByYearsAndDept(int minYears, UseDeptScope scope) {
+        return cstLifeEquipMapper.countByYearsAndDept(minYears, deniedFlag(scope), useDeptListParam(scope));
+    }
+
+    @Override
+    public List<Map<String, Object>> countByYearsAndDeptAndType(int minYears, UseDeptScope scope) {
+        return cstLifeEquipMapper.countByYearsAndDeptAndType(minYears, deniedFlag(scope), useDeptListParam(scope));
     }
 
     @Override

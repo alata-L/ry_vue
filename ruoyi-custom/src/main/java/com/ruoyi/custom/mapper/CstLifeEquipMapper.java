@@ -2,6 +2,7 @@ package com.ruoyi.custom.mapper;
 
 import java.util.List;
 import java.util.Map;
+import org.apache.ibatis.annotations.Param;
 import com.ruoyi.custom.domain.CstLifeEquip;
 
 /**
@@ -18,13 +19,16 @@ public interface CstLifeEquipMapper {
     CstLifeEquip selectCstLifeEquipByEquipNo(String equipNo);
 
     /** 按科室统计各类型设备台数 */
-    List<Map<String, Object>> countByDeptAndType();
+    List<Map<String, Object>> countByDeptAndType(@Param("commonUseDeptDenied") Boolean commonUseDeptDenied,
+        @Param("useDeptList") List<String> useDeptList);
 
     /** 按使用年限统计设备数（全院/科室） */
-    List<Map<String, Object>> countByYearsAndDept(int minYears);
+    List<Map<String, Object>> countByYearsAndDept(@Param("minYears") int minYears,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     /** 按使用年限和设备类型统计设备数（全院/科室） */
-    List<Map<String, Object>> countByYearsAndDeptAndType(int minYears);
+    List<Map<String, Object>> countByYearsAndDeptAndType(@Param("minYears") int minYears,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     int insertCstLifeEquip(CstLifeEquip row);
 

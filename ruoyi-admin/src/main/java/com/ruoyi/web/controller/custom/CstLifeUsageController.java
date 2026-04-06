@@ -1,6 +1,8 @@
 package com.ruoyi.web.controller.custom;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -45,10 +47,14 @@ public class CstLifeUsageController extends BaseController {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private CstCommonUseDeptScopeService cstCommonUseDeptScopeService;
+
     @PreAuthorize("@ss.hasPermi('custom:lifeUsage:history:list')")
     @GetMapping("/history/list")
     public TableDataInfo historyList(CstReportUsageHist query) {
         query.setBizType(CstReportUsageHist.BIZ_LIFE);
+        cstCommonUseDeptScopeService.applyToReportUsageHistQuery(query);
         startPage();
         List<CstReportUsageHist> list = reportUsageHistService.selectCstReportUsageHistList(query);
         createByNickNameHelper.fillReportUsageHistReporterNick(list);
@@ -60,6 +66,7 @@ public class CstLifeUsageController extends BaseController {
     @PreAuthorize("@ss.hasPermi('custom:lifeUsage:export')")
     @PostMapping("/export")
     public void export(HttpServletResponse response, CstLifeUsage row) {
+        cstCommonUseDeptScopeService.applyToLifeUsageQuery(row);
         List<CstLifeUsage> list = cstLifeUsageService.selectCstLifeUsageList(row);
         fillEquipInstallCount(list);
         createByNickNameHelper.fillLifeUsage(list);
@@ -70,6 +77,7 @@ public class CstLifeUsageController extends BaseController {
     @PreAuthorize("@ss.hasPermi('custom:lifeUsage:list')")
     @GetMapping("/list")
     public TableDataInfo list(CstLifeUsage row) {
+        cstCommonUseDeptScopeService.applyToLifeUsageQuery(row);
         startPage();
         List<CstLifeUsage> list = cstLifeUsageService.selectCstLifeUsageList(row);
         fillEquipInstallCount(list);
@@ -81,6 +89,13 @@ public class CstLifeUsageController extends BaseController {
     @GetMapping("/{id}")
     public AjaxResult getInfo(@PathVariable Long id) {
         CstLifeUsage row = cstLifeUsageService.selectCstLifeUsageById(id);
+        if (row == null) {
+            return error("记录不存在");
+        }
+        if (cstCommonUseDeptScopeService.isCommonUseDeptRestricted()
+            && !cstCommonUseDeptScopeService.isUseDeptAllowed(row.getUseDept())) {
+            return error("无权限查看该上报数据");
+        }
         fillEquipInstallCount(row);
         createByNickNameHelper.fillLifeUsage(row);
         return success(row);
@@ -90,6 +105,9 @@ public class CstLifeUsageController extends BaseController {
     @Log(title = "生命支持使用上报", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody CstLifeUsage row) {
+        if (!validateCommonLifeUsageWrite(row)) {
+            return error("只能为本人的所属科室上报");
+        }
         return toAjax(cstLifeUsageService.saveCstLifeUsage(row));
     }
 
@@ -97,6 +115,16 @@ public class CstLifeUsageController extends BaseController {
     @Log(title = "生命支持使用上报", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody CstLifeUsage row) {
+        if (row.getId() == null) {
+            return error("缺少主键");
+        }
+        CstLifeUsage old = cstLifeUsageService.selectCstLifeUsageById(row.getId());
+        if (old == null) {
+            return error("记录不存在");
+        }
+        if (!validateCommonLifeUsageEdit(old, row)) {
+            return error("无权限修改该上报数据");
+        }
         return toAjax(cstLifeUsageService.saveCstLifeUsage(row));
     }
 
@@ -104,6 +132,19 @@ public class CstLifeUsageController extends BaseController {
     @Log(title = "生命支持使用上报", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids) {
+        if (ids == null || ids.length == 0) {
+            return error("请选择要删除的数据");
+        }
+        for (Long id : ids) {
+            CstLifeUsage u = cstLifeUsageService.selectCstLifeUsageById(id);
+            if (u == null) {
+                continue;
+            }
+            if (cstCommonUseDeptScopeService.isCommonUseDeptRestricted()
+                && !cstCommonUseDeptScopeService.isUseDeptAllowed(u.getUseDept())) {
+                return error("无权限删除该上报数据");
+            }
+        }
         return toAjax(cstLifeUsageService.deleteCstLifeUsageByIds(ids));
     }
 
@@ -111,7 +152,31 @@ public class CstLifeUsageController extends BaseController {
     @PreAuthorize("@ss.hasPermi('custom:lifeStats:list')")
     @GetMapping("/sum")
     public AjaxResult sumUsage(String useDept, String equipType, String beginTime, String endTime, String groupBy) {
-        return success(cstLifeUsageService.sumUsageByRange(useDept, equipType, beginTime, endTime, groupBy));
+        Map<String, Object> params = new HashMap<>();
+        params.put("useDept", useDept);
+        params.put("equipType", equipType);
+        params.put("beginTime", beginTime);
+        params.put("endTime", endTime);
+        params.put("groupBy", groupBy != null ? groupBy : "day");
+        cstCommonUseDeptScopeService.applyToSumParams(params);
+        return success(cstLifeUsageService.sumUsageByRange(params));
+    }
+
+    private boolean validateCommonLifeUsageWrite(CstLifeUsage row) {
+        if (!cstCommonUseDeptScopeService.isCommonUseDeptRestricted()) {
+            return true;
+        }
+        return cstCommonUseDeptScopeService.isUseDeptAllowed(row.getUseDept());
+    }
+
+    private boolean validateCommonLifeUsageEdit(CstLifeUsage old, CstLifeUsage row) {
+        if (!cstCommonUseDeptScopeService.isCommonUseDeptRestricted()) {
+            return true;
+        }
+        if (!cstCommonUseDeptScopeService.isUseDeptAllowed(old.getUseDept())) {
+            return false;
+        }
+        return cstCommonUseDeptScopeService.isUseDeptAllowed(row.getUseDept());
     }
 
     /**

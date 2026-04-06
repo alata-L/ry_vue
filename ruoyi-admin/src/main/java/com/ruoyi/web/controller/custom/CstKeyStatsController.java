@@ -25,11 +25,14 @@ public class CstKeyStatsController extends BaseController {
     @Autowired
     private ICstKeyStatsService cstKeyStatsService;
 
+    @Autowired
+    private CstCommonUseDeptScopeService cstCommonUseDeptScopeService;
+
     /** 一级页：全院汇总 + 按科室表格 */
     @PreAuthorize("@ss.hasPermi('custom:keyEquip:list')")
     @GetMapping("/summary")
     public AjaxResult summary() {
-        Map<String, Object> data = cstKeyStatsService.getSummaryAndDeptList();
+        Map<String, Object> data = cstKeyStatsService.getSummaryAndDeptList(cstCommonUseDeptScopeService.currentScope());
         return success(data);
     }
 
@@ -37,21 +40,21 @@ public class CstKeyStatsController extends BaseController {
     @PreAuthorize("@ss.hasPermi('custom:keyEquip:list')")
     @GetMapping("/summarySeries")
     public AjaxResult summarySeries() {
-        return success(cstKeyStatsService.getSummaryMonthlySeries());
+        return success(cstKeyStatsService.getSummaryMonthlySeries(cstCommonUseDeptScopeService.currentScope()));
     }
 
     /** 首页：重点设备今年收费 TOP N */
     @PreAuthorize("@ss.hasPermi('custom:keyEquip:list')")
     @GetMapping("/topEquip")
     public AjaxResult topEquip(@RequestParam(required = false, defaultValue = "10") Integer limit) {
-        return success(cstKeyStatsService.getKeyEquipTopByCharge(limit != null ? limit : 10));
+        return success(cstKeyStatsService.getKeyEquipTopByCharge(limit != null ? limit : 10, cstCommonUseDeptScopeService.currentScope()));
     }
 
     /** 二级页：某科室下按设备统计 */
     @PreAuthorize("@ss.hasPermi('custom:keyEquip:list')")
     @GetMapping("/dept")
     public AjaxResult dept(@RequestParam String useDept) {
-        List<Map<String, Object>> list = cstKeyStatsService.getDeptEquipList(useDept);
+        List<Map<String, Object>> list = cstKeyStatsService.getDeptEquipList(useDept, cstCommonUseDeptScopeService.currentScope());
         return success(list);
     }
 
@@ -63,7 +66,8 @@ public class CstKeyStatsController extends BaseController {
             @RequestParam(required = false, defaultValue = "day") String groupBy,
             @RequestParam(required = false) String beginTime,
             @RequestParam(required = false) String endTime) {
-        List<Map<String, Object>> list = cstKeyStatsService.getEquipSeries(equipId, groupBy, beginTime, endTime);
+        List<Map<String, Object>> list = cstKeyStatsService.getEquipSeries(equipId, groupBy, beginTime, endTime,
+            cstCommonUseDeptScopeService.currentScope());
         return success(list);
     }
 
@@ -75,8 +79,8 @@ public class CstKeyStatsController extends BaseController {
             @RequestParam(required = false, defaultValue = "10") Integer limit) {
         Map<String, List<Map<String, Object>>> data = cstKeyStatsService.getTopEquipMonthlySeriesByValue(
             minValue != null ? minValue : 500000L,
-            limit != null ? limit : 10
-        );
+            limit != null ? limit : 10,
+            cstCommonUseDeptScopeService.currentScope());
         return success(data);
     }
 
@@ -88,7 +92,8 @@ public class CstKeyStatsController extends BaseController {
             @RequestParam(required = false, defaultValue = "10") Integer limit) {
         List<Map<String, Object>> list = cstKeyStatsService.getTopEquipChargeYearCompareByValue(
             minValue != null ? minValue : 500000L,
-            limit != null ? limit : 10);
+            limit != null ? limit : 10,
+            cstCommonUseDeptScopeService.currentScope());
         return success(list);
     }
 }

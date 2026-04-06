@@ -25,9 +25,24 @@
                create_by, create_time, update_by, update_time, remark from cst_life_equip
     </sql>
 
+    <sql id="lifeEquipUseDeptScopePlain">
+        <if test="commonUseDeptDenied != null and commonUseDeptDenied == true">
+            and 1=0
+        </if>
+        <if test="useDeptList != null and useDeptList.size() &gt; 0">
+            and use_dept in
+            <foreach collection="useDeptList" item="ud" open="(" separator="," close=")">#{ud}</foreach>
+        </if>
+    </sql>
+
     <select id="selectCstLifeEquipList" parameterType="com.ruoyi.custom.domain.CstLifeEquip" resultMap="CstLifeEquipResult">
         <include refid="selectCstLifeEquipVo"/>
         <where>
+            <if test="params != null and params.commonUseDeptDenied != null and params.commonUseDeptDenied == true"> and 1=0</if>
+            <if test="params != null and params.useDeptList != null and params.useDeptList.size() &gt; 0">
+                and use_dept in
+                <foreach collection="params.useDeptList" item="ud" open="(" separator="," close=")">#{ud}</foreach>
+            </if>
             <if test="id != null"> and id = #{id}</if>
             <if test="equipNo != null and equipNo != ''"> and equip_no like concat('%', #{equipNo}, '%')</if>
             <if test="useDept != null and useDept != ''"> and use_dept = #{useDept}</if>
@@ -80,18 +95,21 @@
 
     <select id="countByDeptAndType" resultType="map">
         select use_dept as useDept, equip_type as equipType, count(*) as cnt from cst_life_equip where status = '0'
+        <include refid="lifeEquipUseDeptScopePlain"/>
         group by use_dept, equip_type order by use_dept, equip_type
     </select>
 
     <select id="countByYearsAndDept" resultType="map">
         select use_dept as useDept, count(*) as cnt from cst_life_equip
         where status = '0' and cap_date is not null and datediff(curdate(), cap_date) / 365.25 &gt;= #{minYears}
+        <include refid="lifeEquipUseDeptScopePlain"/>
         group by use_dept order by cnt desc
     </select>
 
     <select id="countByYearsAndDeptAndType" resultType="map">
         select use_dept as useDept, equip_type as equipType, count(*) as cnt from cst_life_equip
         where status = '0' and cap_date is not null and datediff(curdate(), cap_date) / 365.25 &gt;= #{minYears}
+        <include refid="lifeEquipUseDeptScopePlain"/>
         group by use_dept, equip_type order by use_dept, equip_type
     </select>
 </mapper>

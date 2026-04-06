@@ -27,32 +27,42 @@ public interface CstKeyEquipUsageMapper {
     int deleteCstKeyEquipUsageByIds(Long[] ids);
 
     /** 指定日期范围内全院收费与诊治例数汇总（收费=sum(treat_count*unit_charge_price)） */
-    Map<String, Object> sumChargeAndTreatInRange(@Param("start") String start, @Param("end") String end);
+    Map<String, Object> sumChargeAndTreatInRange(@Param("start") String start, @Param("end") String end,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     /** 指定日期范围内按科室汇总收费与诊治例数 */
-    List<Map<String, Object>> sumChargeAndTreatByDeptInRange(@Param("start") String start, @Param("end") String end);
+    List<Map<String, Object>> sumChargeAndTreatByDeptInRange(@Param("start") String start, @Param("end") String end,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     /** 指定日期范围内按设备汇总收费与诊治例数 */
-    List<Map<String, Object>> sumChargeAndTreatByEquipInRange(@Param("start") String start, @Param("end") String end);
+    List<Map<String, Object>> sumChargeAndTreatByEquipInRange(@Param("start") String start, @Param("end") String end,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     /** 指定日期范围内、指定科室下按设备汇总收费与诊治例数 */
-    List<Map<String, Object>> sumChargeAndTreatByEquipInRangeAndDept(@Param("useDept") String useDept, @Param("start") String start, @Param("end") String end);
+    List<Map<String, Object>> sumChargeAndTreatByEquipInRangeAndDept(@Param("useDept") String useDept, @Param("start") String start, @Param("end") String end,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     /** 单设备按时段聚合：groupBy=day|week|month|year，返回 period/workHours/treatCount/totalCharge */
-    List<Map<String, Object>> selectSeriesByEquip(@Param("equipId") Long equipId, @Param("start") String start, @Param("end") String end, @Param("groupBy") String groupBy);
+    List<Map<String, Object>> selectSeriesByEquip(@Param("equipId") Long equipId, @Param("start") String start, @Param("end") String end, @Param("groupBy") String groupBy,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     /** 指定日期范围内全院按月汇总收费与诊治例数，返回 period(yyyy-MM)/totalCharge/totalTreat */
-    List<Map<String, Object>> sumChargeAndTreatByMonthInRange(@Param("start") String start, @Param("end") String end);
+    List<Map<String, Object>> sumChargeAndTreatByMonthInRange(@Param("start") String start, @Param("end") String end,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     /** 指定日期范围内按设备汇总收费，按 totalCharge 降序，取前 limit 条，返回 equipId/equipNo/equipDesc/useDept/totalCharge/totalTreat */
-    List<Map<String, Object>> topEquipByChargeInRange(@Param("start") String start, @Param("end") String end, @Param("limit") int limit);
+    List<Map<String, Object>> topEquipByChargeInRange(@Param("start") String start, @Param("end") String end, @Param("limit") int limit,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     /** 按价格范围筛选的TOP10设备（≥50万或≥100万），按 totalCharge 降序，返回 equipId/equipNo/equipDesc/useDept/totalCharge/totalTreat/totalWorkHours */
-    List<Map<String, Object>> topEquipByChargeInRangeAndValue(@Param("start") String start, @Param("end") String end, @Param("minValue") Long minValue, @Param("limit") int limit);
+    List<Map<String, Object>> topEquipByChargeInRangeAndValue(@Param("start") String start, @Param("end") String end, @Param("minValue") Long minValue, @Param("limit") int limit,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     /** TOP10设备按月序列（收费、工作时长、诊疗例数），返回 period/totalCharge/totalWorkHours/totalTreat */
-    List<Map<String, Object>> topEquipMonthlySeries(@Param("start") String start, @Param("end") String end, @Param("minValue") Long minValue, @Param("equipIds") List<Long> equipIds);
+    List<Map<String, Object>> topEquipMonthlySeries(@Param("start") String start, @Param("end") String end, @Param("minValue") Long minValue, @Param("equipIds") List<Long> equipIds,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     /** 指定日期范围内，按设备汇总收费/工作时长/诊疗例数（给定设备 ID），返回 equipId/totalCharge/totalWorkHours/totalTreat */
-    List<Map<String, Object>> sumChargeByEquipIdsInRange(@Param("start") String start, @Param("end") String end, @Param("equipIds") List<Long> equipIds);
+    List<Map<String, Object>> sumChargeByEquipIdsInRange(@Param("start") String start, @Param("end") String end, @Param("equipIds") List<Long> equipIds,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 }

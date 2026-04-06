@@ -23,11 +23,14 @@ public class CstLifeStatsController extends BaseController {
     @Autowired
     private ICstLifeStatsService cstLifeStatsService;
 
+    @Autowired
+    private CstCommonUseDeptScopeService cstCommonUseDeptScopeService;
+
     /** 首页：按设备类型使用趋势（今年按月） */
     @PreAuthorize("@ss.hasPermi('custom:lifeStats:list')")
     @GetMapping("/usageTrend")
     public AjaxResult usageTrend() {
-        List<Map<String, Object>> list = cstLifeStatsService.getUsageTrend();
+        List<Map<String, Object>> list = cstLifeStatsService.getUsageTrend(cstCommonUseDeptScopeService.currentScope());
         return success(list);
     }
 
@@ -35,7 +38,7 @@ public class CstLifeStatsController extends BaseController {
     @PreAuthorize("@ss.hasPermi('custom:lifeStats:list')")
     @GetMapping("/usageByDept")
     public AjaxResult usageByDept() {
-        List<Map<String, Object>> list = cstLifeStatsService.getUsageByDept();
+        List<Map<String, Object>> list = cstLifeStatsService.getUsageByDept(cstCommonUseDeptScopeService.currentScope());
         return success(list);
     }
 
@@ -43,7 +46,7 @@ public class CstLifeStatsController extends BaseController {
     @PreAuthorize("@ss.hasPermi('custom:lifeStats:list')")
     @GetMapping("/equipCountByType")
     public AjaxResult equipCountByType() {
-        Map<String, Long> data = cstLifeStatsService.getEquipCountByType();
+        Map<String, Long> data = cstLifeStatsService.getEquipCountByType(cstCommonUseDeptScopeService.currentScope());
         return success(data);
     }
 
@@ -53,7 +56,8 @@ public class CstLifeStatsController extends BaseController {
     public AjaxResult usageTrendByType(
             @org.springframework.web.bind.annotation.RequestParam String equipType,
             @org.springframework.web.bind.annotation.RequestParam(required = false, defaultValue = "day") String groupBy) {
-        List<Map<String, Object>> list = cstLifeStatsService.getUsageTrendByType(equipType, groupBy);
+        List<Map<String, Object>> list = cstLifeStatsService.getUsageTrendByType(equipType, groupBy,
+            cstCommonUseDeptScopeService.currentScope());
         return success(list);
     }
 
@@ -63,7 +67,8 @@ public class CstLifeStatsController extends BaseController {
     public AjaxResult usageDeptRankByType(
             @org.springframework.web.bind.annotation.RequestParam String equipType,
             @org.springframework.web.bind.annotation.RequestParam(required = false, defaultValue = "day") String groupBy) {
-        List<Map<String, Object>> list = cstLifeStatsService.getUsageDeptRankByType(equipType, groupBy);
+        List<Map<String, Object>> list = cstLifeStatsService.getUsageDeptRankByType(equipType, groupBy,
+            cstCommonUseDeptScopeService.currentScope());
         return success(list);
     }
 }

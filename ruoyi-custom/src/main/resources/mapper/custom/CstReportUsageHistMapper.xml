@@ -27,6 +27,7 @@
         from cst_report_usage_hist h
         left join sys_user su on h.change_by = su.user_name and su.del_flag = '0'
         <where>
+            <if test="params != null and params.commonUseDeptDenied != null and params.commonUseDeptDenied == true"> and 1=0</if>
             <if test="bizType != null and bizType != ''"> and h.biz_type = #{bizType}</if>
             <if test="usageId != null"> and h.usage_id = #{usageId}</if>
             <if test="operType != null and operType != ''"> and h.oper_type = #{operType}</if>
@@ -56,9 +57,19 @@
                 and ifnull(nullif(JSON_UNQUOTE(JSON_EXTRACT(h.after_json, '$.useDept')), ''),
                     JSON_UNQUOTE(JSON_EXTRACT(h.before_json, '$.useDept'))) = #{useDept}
             </if>
+            <if test="bizType == 'LIFE' and params != null and params.useDeptList != null and params.useDeptList.size() &gt; 0">
+                and ifnull(nullif(JSON_UNQUOTE(JSON_EXTRACT(h.after_json, '$.useDept')), ''),
+                    JSON_UNQUOTE(JSON_EXTRACT(h.before_json, '$.useDept'))) in
+                <foreach collection="params.useDeptList" item="ud" open="(" separator="," close=")">#{ud}</foreach>
+            </if>
             <if test="bizType == 'KEY' and useDept != null and useDept != ''">
                 and ifnull(nullif(JSON_UNQUOTE(JSON_EXTRACT(h.after_json, '$.useDept')), ''),
                     JSON_UNQUOTE(JSON_EXTRACT(h.before_json, '$.useDept'))) = #{useDept}
+            </if>
+            <if test="bizType == 'KEY' and params != null and params.useDeptList != null and params.useDeptList.size() &gt; 0">
+                and ifnull(nullif(JSON_UNQUOTE(JSON_EXTRACT(h.after_json, '$.useDept')), ''),
+                    JSON_UNQUOTE(JSON_EXTRACT(h.before_json, '$.useDept'))) in
+                <foreach collection="params.useDeptList" item="ud" open="(" separator="," close=")">#{ud}</foreach>
             </if>
             <if test="bizType == 'KEY' and equipDesc != null and equipDesc != ''">
                 and (

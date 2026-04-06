@@ -2,6 +2,7 @@ package com.ruoyi.custom.mapper;
 
 import java.util.List;
 import java.util.Map;
+import org.apache.ibatis.annotations.Param;
 import com.ruoyi.custom.domain.CstKeyEquip;
 
 /**
@@ -26,14 +27,18 @@ public interface CstKeyEquipMapper {
     int deleteCstKeyEquipByIds(Long[] ids);
 
     /** 全院汇总：设备数量、设备价值（status=0） */
-    Map<String, Object> selectSummary();
+    Map<String, Object> selectSummary(@Param("commonUseDeptDenied") Boolean commonUseDeptDenied,
+        @Param("useDeptList") List<String> useDeptList);
 
     /** 按科室汇总：科室、设备数量、设备价值 */
-    List<Map<String, Object>> selectDeptEquipStats();
+    List<Map<String, Object>> selectDeptEquipStats(@Param("commonUseDeptDenied") Boolean commonUseDeptDenied,
+        @Param("useDeptList") List<String> useDeptList);
 
     /** 按价格范围统计（≥50万）：设备数量、设备价值 */
-    Map<String, Object> selectSummaryByValue50();
+    Map<String, Object> selectSummaryByValue50(@Param("commonUseDeptDenied") Boolean commonUseDeptDenied,
+        @Param("useDeptList") List<String> useDeptList);
 
     /** 按价格范围统计（≥100万）：设备数量、设备价值 */
-    Map<String, Object> selectSummaryByValue100();
+    Map<String, Object> selectSummaryByValue100(@Param("commonUseDeptDenied") Boolean commonUseDeptDenied,
+        @Param("useDeptList") List<String> useDeptList);
 }

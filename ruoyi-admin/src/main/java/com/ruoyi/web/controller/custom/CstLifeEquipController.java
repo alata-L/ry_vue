@@ -34,9 +34,13 @@ public class CstLifeEquipController extends BaseController {
     @Autowired
     private ICstLifeEquipService cstLifeEquipService;
 
+    @Autowired
+    private CstCommonUseDeptScopeService cstCommonUseDeptScopeService;
+
     @PreAuthorize("@ss.hasPermi('custom:lifeEquip:list')")
     @GetMapping("/list")
     public TableDataInfo list(CstLifeEquip row) {
+        cstCommonUseDeptScopeService.applyToLifeEquipQuery(row);
         startPage();
         List<CstLifeEquip> list = cstLifeEquipService.selectCstLifeEquipList(row);
         return getDataTable(list);
@@ -46,6 +50,7 @@ public class CstLifeEquipController extends BaseController {
     @PreAuthorize("@ss.hasPermi('custom:lifeEquip:export')")
     @PostMapping("/export")
     public void export(HttpServletResponse response, CstLifeEquip row) {
+        cstCommonUseDeptScopeService.applyToLifeEquipQuery(row);
         List<CstLifeEquip> list = cstLifeEquipService.selectCstLifeEquipList(row);
         ExcelUtil<CstLifeEquip> util = new ExcelUtil<>(CstLifeEquip.class);
         util.hideColumn("subAssetNo");
@@ -60,6 +65,7 @@ public class CstLifeEquipController extends BaseController {
         CstLifeEquip row = new CstLifeEquip();
         row.setEquipType(equipType);
         row.setStatus("0");
+        cstCommonUseDeptScopeService.applyToLifeEquipQuery(row);
         List<CstLifeEquip> list = cstLifeEquipService.selectCstLifeEquipList(row);
         String title = "1".equals(equipType) ? "监护仪" : "2".equals(equipType) ? "输液泵" : "3".equals(equipType) ? "注射泵" : "通用设备";
         ExcelUtil<CstLifeEquip> util = new ExcelUtil<>(CstLifeEquip.class);
@@ -70,7 +76,15 @@ public class CstLifeEquipController extends BaseController {
     @PreAuthorize("@ss.hasPermi('custom:lifeEquip:query')")
     @GetMapping("/{id}")
     public AjaxResult getInfo(@PathVariable Long id) {
-        return success(cstLifeEquipService.selectCstLifeEquipById(id));
+        CstLifeEquip row = cstLifeEquipService.selectCstLifeEquipById(id);
+        if (row == null) {
+            return error("记录不存在");
+        }
+        if (cstCommonUseDeptScopeService.isCommonUseDeptRestricted()
+            && !cstCommonUseDeptScopeService.isUseDeptAllowed(row.getUseDept())) {
+            return error("无权限查看该设备数据");
+        }
+        return success(row);
     }
 
     @PreAuthorize("@ss.hasPermi('custom:lifeEquip:add')")
@@ -78,6 +92,10 @@ public class CstLifeEquipController extends BaseController {
     @PostMapping
     public AjaxResult add(@RequestBody CstLifeEquip row) {
         row.setStatus("0");
+        if (cstCommonUseDeptScopeService.isCommonUseDeptRestricted()
+            && !cstCommonUseDeptScopeService.isUseDeptAllowed(row.getUseDept())) {
+            return error("只能为本人的所属科室维护台账");
+        }
         return toAjax(cstLifeEquipService.insertCstLifeEquip(row));
     }
 
@@ -85,6 +103,21 @@ public class CstLifeEquipController extends BaseController {
     @Log(title = "通用设备", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody CstLifeEquip row) {
+        if (row.getId() == null) {
+            return error("缺少主键");
+        }
+        CstLifeEquip old = cstLifeEquipService.selectCstLifeEquipById(row.getId());
+        if (old == null) {
+            return error("记录不存在");
+        }
+        if (cstCommonUseDeptScopeService.isCommonUseDeptRestricted()) {
+            if (!cstCommonUseDeptScopeService.isUseDeptAllowed(old.getUseDept())) {
+                return error("无权限修改该设备数据");
+            }
+            if (!cstCommonUseDeptScopeService.isUseDeptAllowed(row.getUseDept())) {
+                return error("只能为本人的所属科室维护台账");
+            }
+        }
         return toAjax(cstLifeEquipService.updateCstLifeEquip(row));
     }
 
@@ -92,6 +125,19 @@ public class CstLifeEquipController extends BaseController {
     @Log(title = "通用设备", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids) {
+        if (ids == null || ids.length == 0) {
+            return error("请选择要删除的数据");
+        }
+        for (Long id : ids) {
+            CstLifeEquip u = cstLifeEquipService.selectCstLifeEquipById(id);
+            if (u == null) {
+                continue;
+            }
+            if (cstCommonUseDeptScopeService.isCommonUseDeptRestricted()
+                && !cstCommonUseDeptScopeService.isUseDeptAllowed(u.getUseDept())) {
+                return error("无权限删除该设备数据");
+            }
+        }
         return toAjax(cstLifeEquipService.deleteCstLifeEquipByIds(ids));
     }
 
@@ -99,7 +145,7 @@ public class CstLifeEquipController extends BaseController {
     @PreAuthorize("@ss.hasPermi('custom:lifeEquip:list')")
     @GetMapping("/stats/deptType")
     public AjaxResult statsDeptType() {
-        return success(cstLifeEquipService.countByDeptAndType());
+        return success(cstLifeEquipService.countByDeptAndType(cstCommonUseDeptScopeService.currentScope()));
     }
 
     /** 按使用年限统计：minYears=6/10/15 */
@@ -107,7 +153,7 @@ public class CstLifeEquipController extends BaseController {
     @GetMapping("/stats/years")
     public AjaxResult statsYears(Integer minYears) {
         if (minYears == null) minYears = 6;
-        return success(cstLifeEquipService.countByYearsAndDept(minYears));
+        return success(cstLifeEquipService.countByYearsAndDept(minYears, cstCommonUseDeptScopeService.currentScope()));
     }
 
     /** 按使用年限和设备类型统计：minYears=6/10/15 */
@@ -115,7 +161,7 @@ public class CstLifeEquipController extends BaseController {
     @GetMapping("/stats/yearsByType")
     public AjaxResult statsYearsByType(Integer minYears) {
         if (minYears == null) minYears = 6;
-        return success(cstLifeEquipService.countByYearsAndDeptAndType(minYears));
+        return success(cstLifeEquipService.countByYearsAndDeptAndType(minYears, cstCommonUseDeptScopeService.currentScope()));
     }
 
     @Log(title = "通用设备", businessType = BusinessType.IMPORT)

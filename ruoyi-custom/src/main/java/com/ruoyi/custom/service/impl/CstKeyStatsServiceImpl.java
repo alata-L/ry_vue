@@ -11,6 +11,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.custom.domain.CstKeyEquip;
+import com.ruoyi.custom.domain.UseDeptScope;
 import com.ruoyi.custom.mapper.CstKeyEquipMapper;
 import com.ruoyi.custom.mapper.CstKeyEquipUsageMapper;
 import com.ruoyi.custom.service.ICstKeyEquipService;
@@ -33,8 +34,22 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
     @Autowired
     private ICstKeyEquipService cstKeyEquipService;
 
+    private static Boolean deniedFlag(UseDeptScope scope) {
+        if (scope.isUnrestricted()) {
+            return null;
+        }
+        return scope.isDenied() ? Boolean.TRUE : null;
+    }
+
+    private static List<String> useDeptListParam(UseDeptScope scope) {
+        if (scope.isUnrestricted() || scope.isDenied()) {
+            return null;
+        }
+        return scope.getUseDeptCodes();
+    }
+
     @Override
-    public Map<String, Object> getSummaryAndDeptList() {
+    public Map<String, Object> getSummaryAndDeptList(UseDeptScope scope) {
         LocalDate now = LocalDate.now();
         String thisMonthStart = now.withDayOfMonth(1).format(FMT);
         String thisMonthEnd = now.format(FMT);
@@ -46,7 +61,7 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
         String lastYearEnd = now.minusYears(1).withMonth(12).withDayOfMonth(31).format(FMT);
 
         Map<String, Object> summary = new HashMap<>();
-        Map<String, Object> equipSummary = cstKeyEquipMapper.selectSummary();
+        Map<String, Object> equipSummary = cstKeyEquipMapper.selectSummary(deniedFlag(scope), useDeptListParam(scope));
         if (equipSummary != null) {
             summary.put("equipCount", toLong(equipSummary.get("equipCount")));
             summary.put("totalValue", equipSummary.get("totalValue"));
@@ -56,7 +71,7 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
         }
         
         // 按价格范围统计（≥50万）
-        Map<String, Object> equipSummary50 = cstKeyEquipMapper.selectSummaryByValue50();
+        Map<String, Object> equipSummary50 = cstKeyEquipMapper.selectSummaryByValue50(deniedFlag(scope), useDeptListParam(scope));
         if (equipSummary50 != null) {
             summary.put("equipCount50", toLong(equipSummary50.get("equipCount")));
             summary.put("totalValue50", equipSummary50.get("totalValue"));
@@ -66,7 +81,7 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
         }
         
         // 按价格范围统计（≥100万）
-        Map<String, Object> equipSummary100 = cstKeyEquipMapper.selectSummaryByValue100();
+        Map<String, Object> equipSummary100 = cstKeyEquipMapper.selectSummaryByValue100(deniedFlag(scope), useDeptListParam(scope));
         if (equipSummary100 != null) {
             summary.put("equipCount100", toLong(equipSummary100.get("equipCount")));
             summary.put("totalValue100", equipSummary100.get("totalValue"));
@@ -75,16 +90,16 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
             summary.put("totalValue100", BigDecimal.ZERO);
         }
         
-        putChargeAndTreat(summary, "ThisMonth", sumInRange(thisMonthStart, thisMonthEnd));
-        putChargeAndTreat(summary, "LastMonth", sumInRange(lastMonthStart, lastMonthEnd));
-        putChargeAndTreat(summary, "ThisYear", sumInRange(thisYearStart, thisYearEnd));
-        putChargeAndTreat(summary, "LastYear", sumInRange(lastYearStart, lastYearEnd));
+        putChargeAndTreat(summary, "ThisMonth", sumInRange(thisMonthStart, thisMonthEnd, scope));
+        putChargeAndTreat(summary, "LastMonth", sumInRange(lastMonthStart, lastMonthEnd, scope));
+        putChargeAndTreat(summary, "ThisYear", sumInRange(thisYearStart, thisYearEnd, scope));
+        putChargeAndTreat(summary, "LastYear", sumInRange(lastYearStart, lastYearEnd, scope));
 
-        List<Map<String, Object>> deptEquipStats = cstKeyEquipMapper.selectDeptEquipStats();
-        List<Map<String, Object>> deptThisMonth = cstKeyEquipUsageMapper.sumChargeAndTreatByDeptInRange(thisMonthStart, thisMonthEnd);
-        List<Map<String, Object>> deptLastMonth = cstKeyEquipUsageMapper.sumChargeAndTreatByDeptInRange(lastMonthStart, lastMonthEnd);
-        List<Map<String, Object>> deptThisYear = cstKeyEquipUsageMapper.sumChargeAndTreatByDeptInRange(thisYearStart, thisYearEnd);
-        List<Map<String, Object>> deptLastYear = cstKeyEquipUsageMapper.sumChargeAndTreatByDeptInRange(lastYearStart, lastYearEnd);
+        List<Map<String, Object>> deptEquipStats = cstKeyEquipMapper.selectDeptEquipStats(deniedFlag(scope), useDeptListParam(scope));
+        List<Map<String, Object>> deptThisMonth = cstKeyEquipUsageMapper.sumChargeAndTreatByDeptInRange(thisMonthStart, thisMonthEnd, deniedFlag(scope), useDeptListParam(scope));
+        List<Map<String, Object>> deptLastMonth = cstKeyEquipUsageMapper.sumChargeAndTreatByDeptInRange(lastMonthStart, lastMonthEnd, deniedFlag(scope), useDeptListParam(scope));
+        List<Map<String, Object>> deptThisYear = cstKeyEquipUsageMapper.sumChargeAndTreatByDeptInRange(thisYearStart, thisYearEnd, deniedFlag(scope), useDeptListParam(scope));
+        List<Map<String, Object>> deptLastYear = cstKeyEquipUsageMapper.sumChargeAndTreatByDeptInRange(lastYearStart, lastYearEnd, deniedFlag(scope), useDeptListParam(scope));
 
         Map<String, Map<String, Object>> byDept = new HashMap<>();
         for (Map<String, Object> row : deptEquipStats) {
@@ -115,12 +130,21 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
     }
 
     @Override
-    public List<Map<String, Object>> getDeptEquipList(String useDept) {
+    public List<Map<String, Object>> getDeptEquipList(String useDept, UseDeptScope scope) {
         if (useDept == null || useDept.isEmpty()) {
             return new ArrayList<>();
         }
+        String ud = useDept.trim();
+        if (!scope.isUnrestricted()) {
+            if (scope.isDenied()) {
+                return new ArrayList<>();
+            }
+            if (!scope.getUseDeptCodes().contains(ud)) {
+                return new ArrayList<>();
+            }
+        }
         CstKeyEquip query = new CstKeyEquip();
-        query.setUseDept(useDept);
+        query.setUseDept(ud);
         query.setStatus("0");
         List<CstKeyEquip> equips = cstKeyEquipService.selectCstKeyEquipList(query);
         if (equips == null || equips.isEmpty()) {
@@ -137,10 +161,10 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
         String lastYearStart = now.minusYears(1).withDayOfYear(1).format(FMT);
         String lastYearEnd = now.minusYears(1).withMonth(12).withDayOfMonth(31).format(FMT);
 
-        List<Map<String, Object>> m1 = cstKeyEquipUsageMapper.sumChargeAndTreatByEquipInRangeAndDept(useDept, thisMonthStart, thisMonthEnd);
-        List<Map<String, Object>> m2 = cstKeyEquipUsageMapper.sumChargeAndTreatByEquipInRangeAndDept(useDept, lastMonthStart, lastMonthEnd);
-        List<Map<String, Object>> m3 = cstKeyEquipUsageMapper.sumChargeAndTreatByEquipInRangeAndDept(useDept, thisYearStart, thisYearEnd);
-        List<Map<String, Object>> m4 = cstKeyEquipUsageMapper.sumChargeAndTreatByEquipInRangeAndDept(useDept, lastYearStart, lastYearEnd);
+        List<Map<String, Object>> m1 = cstKeyEquipUsageMapper.sumChargeAndTreatByEquipInRangeAndDept(ud, thisMonthStart, thisMonthEnd, deniedFlag(scope), useDeptListParam(scope));
+        List<Map<String, Object>> m2 = cstKeyEquipUsageMapper.sumChargeAndTreatByEquipInRangeAndDept(ud, lastMonthStart, lastMonthEnd, deniedFlag(scope), useDeptListParam(scope));
+        List<Map<String, Object>> m3 = cstKeyEquipUsageMapper.sumChargeAndTreatByEquipInRangeAndDept(ud, thisYearStart, thisYearEnd, deniedFlag(scope), useDeptListParam(scope));
+        List<Map<String, Object>> m4 = cstKeyEquipUsageMapper.sumChargeAndTreatByEquipInRangeAndDept(ud, lastYearStart, lastYearEnd, deniedFlag(scope), useDeptListParam(scope));
 
         Map<Long, Map<String, Object>> usageByEquip = new HashMap<>();
         for (CstKeyEquip e : equips) {
@@ -167,9 +191,22 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
     }
 
     @Override
-    public List<Map<String, Object>> getEquipSeries(Long equipId, String groupBy, String beginTime, String endTime) {
+    public List<Map<String, Object>> getEquipSeries(Long equipId, String groupBy, String beginTime, String endTime, UseDeptScope scope) {
         if (equipId == null) {
             return new ArrayList<>();
+        }
+        CstKeyEquip equip = cstKeyEquipService.selectCstKeyEquipById(equipId);
+        if (equip == null) {
+            return new ArrayList<>();
+        }
+        if (!scope.isUnrestricted()) {
+            if (scope.isDenied()) {
+                return new ArrayList<>();
+            }
+            String eud = equip.getUseDept() != null ? equip.getUseDept().trim() : "";
+            if (!scope.getUseDeptCodes().contains(eud)) {
+                return new ArrayList<>();
+            }
         }
         if (groupBy == null || groupBy.isEmpty()) {
             groupBy = "day";
@@ -195,7 +232,7 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
                     break;
             }
         }
-        List<Map<String, Object>> list = cstKeyEquipUsageMapper.selectSeriesByEquip(equipId, beginTime, endTime, groupBy);
+        List<Map<String, Object>> list = cstKeyEquipUsageMapper.selectSeriesByEquip(equipId, beginTime, endTime, groupBy, deniedFlag(scope), useDeptListParam(scope));
         List<Map<String, Object>> result = new ArrayList<>();
         for (Map<String, Object> row : list) {
             Map<String, Object> out = new HashMap<>(row);
@@ -224,7 +261,7 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
     }
 
     @Override
-    public Map<String, List<Map<String, Object>>> getSummaryMonthlySeries() {
+    public Map<String, List<Map<String, Object>>> getSummaryMonthlySeries(UseDeptScope scope) {
         LocalDate now = LocalDate.now();
         int thisYear = now.getYear();
         int lastYear = thisYear - 1;
@@ -233,8 +270,8 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
         String lastYearStart = LocalDate.of(lastYear, 1, 1).format(FMT);
         String lastYearEnd = LocalDate.of(lastYear, 12, 31).format(FMT);
 
-        List<Map<String, Object>> thisYearRaw = cstKeyEquipUsageMapper.sumChargeAndTreatByMonthInRange(thisYearStart, thisYearEnd);
-        List<Map<String, Object>> lastYearRaw = cstKeyEquipUsageMapper.sumChargeAndTreatByMonthInRange(lastYearStart, lastYearEnd);
+        List<Map<String, Object>> thisYearRaw = cstKeyEquipUsageMapper.sumChargeAndTreatByMonthInRange(thisYearStart, thisYearEnd, deniedFlag(scope), useDeptListParam(scope));
+        List<Map<String, Object>> lastYearRaw = cstKeyEquipUsageMapper.sumChargeAndTreatByMonthInRange(lastYearStart, lastYearEnd, deniedFlag(scope), useDeptListParam(scope));
 
         Map<String, Map<String, Object>> thisYearByPeriod = toMapByPeriod(thisYearRaw);
         Map<String, Map<String, Object>> lastYearByPeriod = toMapByPeriod(lastYearRaw);
@@ -257,18 +294,18 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
     }
 
     @Override
-    public List<Map<String, Object>> getKeyEquipTopByCharge(int limit) {
+    public List<Map<String, Object>> getKeyEquipTopByCharge(int limit, UseDeptScope scope) {
         if (limit <= 0) limit = 10;
         LocalDate now = LocalDate.now();
         int year = now.getYear();
         String start = LocalDate.of(year, 1, 1).format(FMT);
         String end = now.format(FMT);
-        List<Map<String, Object>> list = cstKeyEquipUsageMapper.topEquipByChargeInRange(start, end, limit);
+        List<Map<String, Object>> list = cstKeyEquipUsageMapper.topEquipByChargeInRange(start, end, limit, deniedFlag(scope), useDeptListParam(scope));
         return list != null ? list : new ArrayList<>();
     }
 
     @Override
-    public Map<String, List<Map<String, Object>>> getTopEquipMonthlySeriesByValue(Long minValue, int limit) {
+    public Map<String, List<Map<String, Object>>> getTopEquipMonthlySeriesByValue(Long minValue, int limit, UseDeptScope scope) {
         if (minValue == null) minValue = 500000L;
         if (limit <= 0) limit = 10;
         
@@ -280,7 +317,7 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
         String lastYearEnd = LocalDate.of(year - 1, 12, 31).format(FMT);
 
         // 获取今年TOP10设备ID列表
-        List<Map<String, Object>> topEquipList = cstKeyEquipUsageMapper.topEquipByChargeInRangeAndValue(thisYearStart, thisYearEnd, minValue, limit);
+        List<Map<String, Object>> topEquipList = cstKeyEquipUsageMapper.topEquipByChargeInRangeAndValue(thisYearStart, thisYearEnd, minValue, limit, deniedFlag(scope), useDeptListParam(scope));
         List<Long> equipIds = new ArrayList<>();
         if (topEquipList != null && !topEquipList.isEmpty()) {
             for (Map<String, Object> row : topEquipList) {
@@ -296,8 +333,8 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
         List<Map<String, Object>> lastYearList = new ArrayList<>();
         
         if (!equipIds.isEmpty()) {
-            thisYearList = cstKeyEquipUsageMapper.topEquipMonthlySeries(thisYearStart, thisYearEnd, minValue, equipIds);
-            lastYearList = cstKeyEquipUsageMapper.topEquipMonthlySeries(lastYearStart, lastYearEnd, minValue, equipIds);
+            thisYearList = cstKeyEquipUsageMapper.topEquipMonthlySeries(thisYearStart, thisYearEnd, minValue, equipIds, deniedFlag(scope), useDeptListParam(scope));
+            lastYearList = cstKeyEquipUsageMapper.topEquipMonthlySeries(lastYearStart, lastYearEnd, minValue, equipIds, deniedFlag(scope), useDeptListParam(scope));
         }
 
         // 构建完整的12个月数据
@@ -311,7 +348,7 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
     }
 
     @Override
-    public List<Map<String, Object>> getTopEquipChargeYearCompareByValue(Long minValue, int limit) {
+    public List<Map<String, Object>> getTopEquipChargeYearCompareByValue(Long minValue, int limit, UseDeptScope scope) {
         if (minValue == null) minValue = 500000L;
         if (limit <= 0) limit = 10;
         LocalDate now = LocalDate.now();
@@ -322,7 +359,7 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
         String lastYearEnd = LocalDate.of(year - 1, 12, 31).format(FMT);
 
         List<Map<String, Object>> topThisYear = cstKeyEquipUsageMapper.topEquipByChargeInRangeAndValue(
-            thisYearStart, thisYearEnd, minValue, limit);
+            thisYearStart, thisYearEnd, minValue, limit, deniedFlag(scope), useDeptListParam(scope));
         if (topThisYear == null || topThisYear.isEmpty()) {
             return new ArrayList<>();
         }
@@ -334,7 +371,7 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
             }
         }
         List<Map<String, Object>> lastYearRows = cstKeyEquipUsageMapper.sumChargeByEquipIdsInRange(
-            lastYearStart, lastYearEnd, equipIds);
+            lastYearStart, lastYearEnd, equipIds, deniedFlag(scope), useDeptListParam(scope));
         Map<Long, BigDecimal> lastYearCharge = new HashMap<>();
         Map<Long, Long> lastYearWorkHours = new HashMap<>();
         Map<Long, Long> lastYearTreat = new HashMap<>();
@@ -414,8 +451,8 @@ public class CstKeyStatsServiceImpl implements ICstKeyStatsService {
         return row;
     }
 
-    private Map<String, Object> sumInRange(String start, String end) {
-        Map<String, Object> m = cstKeyEquipUsageMapper.sumChargeAndTreatInRange(start, end);
+    private Map<String, Object> sumInRange(String start, String end, UseDeptScope scope) {
+        Map<String, Object> m = cstKeyEquipUsageMapper.sumChargeAndTreatInRange(start, end, deniedFlag(scope), useDeptListParam(scope));
         return m != null ? m : new HashMap<>();
     }
 

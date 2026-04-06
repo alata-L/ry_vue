@@ -24,9 +24,24 @@
                create_by, create_time, update_by, update_time, remark from cst_key_equip
     </sql>
 
+    <sql id="keyEquipUseDeptScopePlain">
+        <if test="commonUseDeptDenied != null and commonUseDeptDenied == true">
+            and 1=0
+        </if>
+        <if test="useDeptList != null and useDeptList.size() &gt; 0">
+            and use_dept in
+            <foreach collection="useDeptList" item="ud" open="(" separator="," close=")">#{ud}</foreach>
+        </if>
+    </sql>
+
     <select id="selectCstKeyEquipList" parameterType="com.ruoyi.custom.domain.CstKeyEquip" resultMap="CstKeyEquipResult">
         <include refid="selectCstKeyEquipVo"/>
         <where>
+            <if test="params != null and params.commonUseDeptDenied != null and params.commonUseDeptDenied == true"> and 1=0</if>
+            <if test="params != null and params.useDeptList != null and params.useDeptList.size() &gt; 0">
+                and use_dept in
+                <foreach collection="params.useDeptList" item="ud" open="(" separator="," close=")">#{ud}</foreach>
+            </if>
             <if test="id != null"> and id = #{id}</if>
             <if test="equipNo != null and equipNo != ''"> and equip_no like concat('%', #{equipNo}, '%')</if>
             <if test="useDept != null and useDept != ''"> and use_dept = #{useDept}</if>
@@ -80,12 +95,14 @@
     <select id="selectSummary" resultType="map">
         select count(*) as equipCount, ifnull(sum(total_value), 0) as totalValue
         from cst_key_equip where status = '0'
+        <include refid="keyEquipUseDeptScopePlain"/>
     </select>
 
     <!-- 重点设备统计：按科室汇总设备数与价值 -->
     <select id="selectDeptEquipStats" resultType="map">
         select use_dept as useDept, count(*) as equipCount, ifnull(sum(total_value), 0) as totalValue
         from cst_key_equip where status = '0'
+        <include refid="keyEquipUseDeptScopePlain"/>
         group by use_dept order by use_dept
     </select>
 
@@ -93,11 +110,13 @@
     <select id="selectSummaryByValue50" resultType="map">
         select count(*) as equipCount, ifnull(sum(total_value), 0) as totalValue
         from cst_key_equip where status = '0' and total_value >= 500000
+        <include refid="keyEquipUseDeptScopePlain"/>
     </select>
 
     <!-- 重点设备统计：按价格范围统计（≥100万） -->
     <select id="selectSummaryByValue100" resultType="map">
         select count(*) as equipCount, ifnull(sum(total_value), 0) as totalValue
         from cst_key_equip where status = '0' and total_value >= 1000000
+        <include refid="keyEquipUseDeptScopePlain"/>
     </select>
 </mapper>

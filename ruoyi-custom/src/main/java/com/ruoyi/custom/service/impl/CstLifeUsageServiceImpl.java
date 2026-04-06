@@ -81,6 +81,14 @@ public class CstLifeUsageServiceImpl implements ICstLifeUsageService {
         params.put("beginTime", beginTime);
         params.put("endTime", endTime);
         params.put("groupBy", groupBy != null ? groupBy : "day");
+        return sumUsageByRange(params);
+    }
+
+    @Override
+    public List<Map<String, Object>> sumUsageByRange(Map<String, Object> params) {
+        if (params.get("groupBy") == null || "".equals(params.get("groupBy"))) {
+            params.put("groupBy", "day");
+        }
         return cstLifeUsageMapper.sumUsageByRange(params);
     }
 }

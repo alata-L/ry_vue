@@ -30,14 +30,18 @@ public interface CstLifeUsageMapper {
     List<Map<String, Object>> sumUsageByRange(Map<String, Object> params);
 
     /** 指定日期范围内按月份+设备类型汇总使用台数，返回 statPeriod(yyyy-MM)/equipType/totalCount */
-    List<Map<String, Object>> sumUsageByMonthAndType(@Param("start") String start, @Param("end") String end);
+    List<Map<String, Object>> sumUsageByMonthAndType(@Param("start") String start, @Param("end") String end,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     /** 指定日期范围内按科室汇总使用台数，返回 useDept/totalCount */
-    List<Map<String, Object>> sumUsageByDeptInRange(@Param("start") String start, @Param("end") String end);
+    List<Map<String, Object>> sumUsageByDeptInRange(@Param("start") String start, @Param("end") String end,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     /** 全院使用趋势（按日、月、年，按设备类型，日均数据），返回 statPeriod/equipType/avgDailyCount */
-    List<Map<String, Object>> sumUsageTrendByType(@Param("start") String start, @Param("end") String end, @Param("equipType") String equipType, @Param("groupBy") String groupBy);
+    List<Map<String, Object>> sumUsageTrendByType(@Param("start") String start, @Param("end") String end, @Param("equipType") String equipType, @Param("groupBy") String groupBy,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 
     /** 科室排名TOP5（按日、月、年，按设备类型，日均数据），返回 statPeriod/useDept/avgDailyCount */
-    List<Map<String, Object>> sumUsageDeptRankByType(@Param("start") String start, @Param("end") String end, @Param("equipType") String equipType, @Param("groupBy") String groupBy);
+    List<Map<String, Object>> sumUsageDeptRankByType(@Param("start") String start, @Param("end") String end, @Param("equipType") String equipType, @Param("groupBy") String groupBy,
+        @Param("commonUseDeptDenied") Boolean commonUseDeptDenied, @Param("useDeptList") List<String> useDeptList);
 }

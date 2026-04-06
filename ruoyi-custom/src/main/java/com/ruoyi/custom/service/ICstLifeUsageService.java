@@ -21,4 +21,7 @@ public interface ICstLifeUsageService {
 
     /** 按时间范围汇总使用数据，groupBy: day|month|year */
     List<Map<String, Object>> sumUsageByRange(String useDept, String equipType, String beginTime, String endTime, String groupBy);
+
+    /** 与 Mapper 一致：params 含 useDept、equipType、beginTime、endTime、groupBy，及 common 科室范围键 */
+    List<Map<String, Object>> sumUsageByRange(Map<String, Object> params);
 }

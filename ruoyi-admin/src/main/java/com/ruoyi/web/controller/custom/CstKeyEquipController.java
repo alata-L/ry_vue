@@ -34,9 +34,13 @@ public class CstKeyEquipController extends BaseController {
     @Autowired
     private ICstKeyEquipService cstKeyEquipService;
 
+    @Autowired
+    private CstCommonUseDeptScopeService cstCommonUseDeptScopeService;
+
     @PreAuthorize("@ss.hasPermi('custom:keyEquip:list')")
     @GetMapping("/list")
     public TableDataInfo list(CstKeyEquip row) {
+        cstCommonUseDeptScopeService.applyToKeyEquipQuery(row);
         startPage();
         List<CstKeyEquip> list = cstKeyEquipService.selectCstKeyEquipList(row);
         return getDataTable(list);
@@ -46,6 +50,7 @@ public class CstKeyEquipController extends BaseController {
     @PreAuthorize("@ss.hasPermi('custom:keyEquip:export')")
     @PostMapping("/export")
     public void export(HttpServletResponse response, CstKeyEquip row) {
+        cstCommonUseDeptScopeService.applyToKeyEquipQuery(row);
         List<CstKeyEquip> list = cstKeyEquipService.selectCstKeyEquipList(row);
         ExcelUtil<CstKeyEquip> util = new ExcelUtil<>(CstKeyEquip.class);
         util.exportExcel(response, list, "重点设备(单价≥50万)");
@@ -54,7 +59,15 @@ public class CstKeyEquipController extends BaseController {
     @PreAuthorize("@ss.hasPermi('custom:keyEquip:query')")
     @GetMapping("/{id}")
     public AjaxResult getInfo(@PathVariable Long id) {
-        return success(cstKeyEquipService.selectCstKeyEquipById(id));
+        CstKeyEquip row = cstKeyEquipService.selectCstKeyEquipById(id);
+        if (row == null) {
+            return error("记录不存在");
+        }
+        if (cstCommonUseDeptScopeService.isCommonUseDeptRestricted()
+            && !cstCommonUseDeptScopeService.isUseDeptAllowed(row.getUseDept())) {
+            return error("无权限查看该设备数据");
+        }
+        return success(row);
     }
 
     @PreAuthorize("@ss.hasPermi('custom:keyEquip:add')")
@@ -62,6 +75,10 @@ public class CstKeyEquipController extends BaseController {
     @PostMapping
     public AjaxResult add(@RequestBody CstKeyEquip row) {
         row.setStatus("0");
+        if (cstCommonUseDeptScopeService.isCommonUseDeptRestricted()
+            && !cstCommonUseDeptScopeService.isUseDeptAllowed(row.getUseDept())) {
+            return error("只能为本人的所属科室维护台账");
+        }
         return toAjax(cstKeyEquipService.insertCstKeyEquip(row));
     }
 
@@ -69,6 +86,21 @@ public class CstKeyEquipController extends BaseController {
     @Log(title = "重点设备", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody CstKeyEquip row) {
+        if (row.getId() == null) {
+            return error("缺少主键");
+        }
+        CstKeyEquip old = cstKeyEquipService.selectCstKeyEquipById(row.getId());
+        if (old == null) {
+            return error("记录不存在");
+        }
+        if (cstCommonUseDeptScopeService.isCommonUseDeptRestricted()) {
+            if (!cstCommonUseDeptScopeService.isUseDeptAllowed(old.getUseDept())) {
+                return error("无权限修改该设备数据");
+            }
+            if (!cstCommonUseDeptScopeService.isUseDeptAllowed(row.getUseDept())) {
+                return error("只能为本人的所属科室维护台账");
+            }
+        }
         return toAjax(cstKeyEquipService.updateCstKeyEquip(row));
     }
 
@@ -76,6 +108,19 @@ public class CstKeyEquipController extends BaseController {
     @Log(title = "重点设备", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids) {
+        if (ids == null || ids.length == 0) {
+            return error("请选择要删除的数据");
+        }
+        for (Long id : ids) {
+            CstKeyEquip u = cstKeyEquipService.selectCstKeyEquipById(id);
+            if (u == null) {
+                continue;
+            }
+            if (cstCommonUseDeptScopeService.isCommonUseDeptRestricted()
+                && !cstCommonUseDeptScopeService.isUseDeptAllowed(u.getUseDept())) {
+                return error("无权限删除该设备数据");
+            }
+        }
         return toAjax(cstKeyEquipService.deleteCstKeyEquipByIds(ids));
     }
 

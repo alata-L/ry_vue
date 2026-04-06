@@ -20,6 +20,17 @@
         inner join cst_cn_work_calendar wc on wc.cal_date = u.stat_date and wc.is_workday = 1
     </sql>
 
+    <!-- common 角色：u 别名上的使用科室范围 -->
+    <sql id="lifeUsageUseDeptScopeU">
+        <if test="commonUseDeptDenied != null and commonUseDeptDenied == true">
+            and 1=0
+        </if>
+        <if test="useDeptList != null and useDeptList.size() &gt; 0">
+            and u.use_dept in
+            <foreach collection="useDeptList" item="ud" open="(" separator="," close=")">#{ud}</foreach>
+        </if>
+    </sql>
+
     <!-- 装配台数在 Service 中按 CstLifeEquipMapper 统计后写入 equipInstallCount，避免仅依赖 XML 子查询未被打进部署包 -->
     <sql id="selectCstLifeUsageVo">
         select id, stat_date, equip_type, use_dept, used_count, create_by, create_time, update_by, update_time, remark from cst_life_usage
@@ -28,6 +39,11 @@
     <select id="selectCstLifeUsageList" parameterType="com.ruoyi.custom.domain.CstLifeUsage" resultMap="CstLifeUsageResult">
         <include refid="selectCstLifeUsageVo"/>
         <where>
+            <if test="params != null and params.commonUseDeptDenied != null and params.commonUseDeptDenied == true"> and 1=0</if>
+            <if test="params != null and params.useDeptList != null and params.useDeptList.size() &gt; 0">
+                and use_dept in
+                <foreach collection="params.useDeptList" item="ud" open="(" separator="," close=")">#{ud}</foreach>
+            </if>
             <if test="params != null and params.beginTime != null and params.beginTime != ''"> and stat_date &gt;= #{params.beginTime}</if>
             <if test="params != null and params.endTime != null and params.endTime != ''"> and stat_date &lt;= #{params.endTime}</if>
             <if test="equipType != null and equipType != ''"> and equip_type = #{equipType}</if>
@@ -81,6 +97,7 @@
         from cst_life_usage u
         <include refid="lifeUsageWorkdayJoin"/>
         <where>
+            <include refid="lifeUsageUseDeptScopeU"/>
             <if test="beginTime != null and beginTime != ''"> and u.stat_date &gt;= #{beginTime}</if>
             <if test="endTime != null and endTime != ''"> and u.stat_date &lt;= #{endTime}</if>
             <if test="equipType != null and equipType != ''"> and u.equip_type = #{equipType}</if>
@@ -103,6 +120,7 @@
         from cst_life_usage u
         <include refid="lifeUsageWorkdayJoin"/>
         where u.stat_date &gt;= #{start} and u.stat_date &lt;= #{end}
+        <include refid="lifeUsageUseDeptScopeU"/>
         group by date_format(u.stat_date, '%Y-%m'), u.equip_type
         order by statPeriod, equip_type
     </select>
@@ -113,6 +131,7 @@
         from cst_life_usage u
         <include refid="lifeUsageWorkdayJoin"/>
         where u.stat_date &gt;= #{start} and u.stat_date &lt;= #{end}
+        <include refid="lifeUsageUseDeptScopeU"/>
         group by u.use_dept
         order by totalCount desc
     </select>
@@ -135,6 +154,7 @@
         <include refid="lifeUsageWorkdayJoin"/>
         where u.stat_date &gt;= #{start} and u.stat_date &lt;= #{end}
           and u.equip_type = #{equipType}
+        <include refid="lifeUsageUseDeptScopeU"/>
         group by
         <choose>
             <when test="groupBy == 'month'">date_format(u.stat_date, '%Y-%m')</when>
@@ -162,6 +182,7 @@
         <include refid="lifeUsageWorkdayJoin"/>
         where u.stat_date &gt;= #{start} and u.stat_date &lt;= #{end}
           and u.equip_type = #{equipType}
+        <include refid="lifeUsageUseDeptScopeU"/>
         group by
         <choose>
             <when test="groupBy == 'month'">date_format(u.stat_date, '%Y-%m'), u.use_dept</when>
