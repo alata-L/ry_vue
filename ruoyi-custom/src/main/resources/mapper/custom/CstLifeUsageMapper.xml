@@ -15,6 +15,11 @@
         <result property="remark"     column="remark"    />
     </resultMap>
 
+    <!-- 国务院办公厅工作日历：仅 stat_date 为工作日时参与生命支持类汇总 -->
+    <sql id="lifeUsageWorkdayJoin">
+        inner join cst_cn_work_calendar wc on wc.cal_date = u.stat_date and wc.is_workday = 1
+    </sql>
+
     <!-- 装配台数在 Service 中按 CstLifeEquipMapper 统计后写入 equipInstallCount，避免仅依赖 XML 子查询未被打进部署包 -->
     <sql id="selectCstLifeUsageVo">
         select id, stat_date, equip_type, use_dept, used_count, create_by, create_time, update_by, update_time, remark from cst_life_usage
@@ -68,44 +73,47 @@
     <select id="sumUsageByRange" parameterType="map" resultType="map">
         select
         <choose>
-            <when test="groupBy == 'month'">date_format(stat_date,'%Y-%m') as statPeriod,</when>
-            <when test="groupBy == 'year'">date_format(stat_date,'%Y') as statPeriod,</when>
-            <otherwise>stat_date as statPeriod,</otherwise>
+            <when test="groupBy == 'month'">date_format(u.stat_date,'%Y-%m') as statPeriod,</when>
+            <when test="groupBy == 'year'">date_format(u.stat_date,'%Y') as statPeriod,</when>
+            <otherwise>u.stat_date as statPeriod,</otherwise>
         </choose>
-        equip_type as equipType, use_dept as useDept, sum(used_count) as totalCount
-        from cst_life_usage
+        u.equip_type as equipType, u.use_dept as useDept, sum(u.used_count) as totalCount
+        from cst_life_usage u
+        <include refid="lifeUsageWorkdayJoin"/>
         <where>
-            <if test="beginTime != null and beginTime != ''"> and stat_date &gt;= #{beginTime}</if>
-            <if test="endTime != null and endTime != ''"> and stat_date &lt;= #{endTime}</if>
-            <if test="equipType != null and equipType != ''"> and equip_type = #{equipType}</if>
-            <if test="useDept != null and useDept != ''"> and use_dept = #{useDept}</if>
+            <if test="beginTime != null and beginTime != ''"> and u.stat_date &gt;= #{beginTime}</if>
+            <if test="endTime != null and endTime != ''"> and u.stat_date &lt;= #{endTime}</if>
+            <if test="equipType != null and equipType != ''"> and u.equip_type = #{equipType}</if>
+            <if test="useDept != null and useDept != ''"> and u.use_dept = #{useDept}</if>
         </where>
         group by
         <choose>
-            <when test="groupBy == 'month'">date_format(stat_date,'%Y-%m'),</when>
-            <when test="groupBy == 'year'">date_format(stat_date,'%Y'),</when>
-            <otherwise>stat_date,</otherwise>
+            <when test="groupBy == 'month'">date_format(u.stat_date,'%Y-%m'),</when>
+            <when test="groupBy == 'year'">date_format(u.stat_date,'%Y'),</when>
+            <otherwise>u.stat_date,</otherwise>
         </choose>
-        equip_type, use_dept order by statPeriod, equip_type, use_dept
+        u.equip_type, u.use_dept order by statPeriod, equip_type, use_dept
     </select>
 
     <!-- 生命支持类统计：指定日期范围内按月份+设备类型汇总，返回 statPeriod(yyyy-MM)/equipType/totalCount -->
     <select id="sumUsageByMonthAndType" resultType="map">
-        select date_format(stat_date, '%Y-%m') as statPeriod,
-               equip_type as equipType,
-               ifnull(sum(used_count), 0) as totalCount
-        from cst_life_usage
-        where stat_date &gt;= #{start} and stat_date &lt;= #{end}
-        group by date_format(stat_date, '%Y-%m'), equip_type
+        select date_format(u.stat_date, '%Y-%m') as statPeriod,
+               u.equip_type as equipType,
+               ifnull(sum(u.used_count), 0) as totalCount
+        from cst_life_usage u
+        <include refid="lifeUsageWorkdayJoin"/>
+        where u.stat_date &gt;= #{start} and u.stat_date &lt;= #{end}
+        group by date_format(u.stat_date, '%Y-%m'), u.equip_type
         order by statPeriod, equip_type
     </select>
 
     <!-- 生命支持类统计：指定日期范围内按科室汇总，返回 useDept/totalCount -->
     <select id="sumUsageByDeptInRange" resultType="map">
-        select use_dept as useDept, ifnull(sum(used_count), 0) as totalCount
-        from cst_life_usage
-        where stat_date &gt;= #{start} and stat_date &lt;= #{end}
-        group by use_dept
+        select u.use_dept as useDept, ifnull(sum(u.used_count), 0) as totalCount
+        from cst_life_usage u
+        <include refid="lifeUsageWorkdayJoin"/>
+        where u.stat_date &gt;= #{start} and u.stat_date &lt;= #{end}
+        group by u.use_dept
         order by totalCount desc
     </select>
 
@@ -113,24 +121,25 @@
     <select id="sumUsageTrendByType" resultType="map">
         select
         <choose>
-            <when test="groupBy == 'month'">date_format(stat_date, '%Y-%m') as statPeriod,</when>
-            <when test="groupBy == 'year'">date_format(stat_date, '%Y') as statPeriod,</when>
-            <otherwise>stat_date as statPeriod,</otherwise>
+            <when test="groupBy == 'month'">date_format(u.stat_date, '%Y-%m') as statPeriod,</when>
+            <when test="groupBy == 'year'">date_format(u.stat_date, '%Y') as statPeriod,</when>
+            <otherwise>u.stat_date as statPeriod,</otherwise>
         </choose>
-        equip_type as equipType,
+        u.equip_type as equipType,
         <choose>
-            <when test="groupBy == 'month'">ifnull(sum(used_count) / count(distinct stat_date), 0) as avgDailyCount</when>
-            <when test="groupBy == 'year'">ifnull(sum(used_count) / count(distinct stat_date), 0) as avgDailyCount</when>
-            <otherwise>ifnull(sum(used_count), 0) as avgDailyCount</otherwise>
+            <when test="groupBy == 'month'">ifnull(sum(u.used_count) / count(distinct u.stat_date), 0) as avgDailyCount</when>
+            <when test="groupBy == 'year'">ifnull(sum(u.used_count) / count(distinct u.stat_date), 0) as avgDailyCount</when>
+            <otherwise>ifnull(sum(u.used_count), 0) as avgDailyCount</otherwise>
         </choose>
-        from cst_life_usage
-        where stat_date &gt;= #{start} and stat_date &lt;= #{end}
-          and equip_type = #{equipType}
+        from cst_life_usage u
+        <include refid="lifeUsageWorkdayJoin"/>
+        where u.stat_date &gt;= #{start} and u.stat_date &lt;= #{end}
+          and u.equip_type = #{equipType}
         group by
         <choose>
-            <when test="groupBy == 'month'">date_format(stat_date, '%Y-%m')</when>
-            <when test="groupBy == 'year'">date_format(stat_date, '%Y')</when>
-            <otherwise>stat_date</otherwise>
+            <when test="groupBy == 'month'">date_format(u.stat_date, '%Y-%m')</when>
+            <when test="groupBy == 'year'">date_format(u.stat_date, '%Y')</when>
+            <otherwise>u.stat_date</otherwise>
         </choose>
         order by statPeriod
     </select>
@@ -139,24 +148,25 @@
     <select id="sumUsageDeptRankByType" resultType="map">
         select
         <choose>
-            <when test="groupBy == 'month'">date_format(stat_date, '%Y-%m') as statPeriod,</when>
-            <when test="groupBy == 'year'">date_format(stat_date, '%Y') as statPeriod,</when>
-            <otherwise>stat_date as statPeriod,</otherwise>
+            <when test="groupBy == 'month'">date_format(u.stat_date, '%Y-%m') as statPeriod,</when>
+            <when test="groupBy == 'year'">date_format(u.stat_date, '%Y') as statPeriod,</when>
+            <otherwise>u.stat_date as statPeriod,</otherwise>
         </choose>
-        use_dept as useDept,
+        u.use_dept as useDept,
         <choose>
-            <when test="groupBy == 'month'">ifnull(sum(used_count) / count(distinct stat_date), 0) as avgDailyCount</when>
-            <when test="groupBy == 'year'">ifnull(sum(used_count) / count(distinct stat_date), 0) as avgDailyCount</when>
-            <otherwise>ifnull(sum(used_count), 0) as avgDailyCount</otherwise>
+            <when test="groupBy == 'month'">ifnull(sum(u.used_count) / count(distinct u.stat_date), 0) as avgDailyCount</when>
+            <when test="groupBy == 'year'">ifnull(sum(u.used_count) / count(distinct u.stat_date), 0) as avgDailyCount</when>
+            <otherwise>ifnull(sum(u.used_count), 0) as avgDailyCount</otherwise>
         </choose>
-        from cst_life_usage
-        where stat_date &gt;= #{start} and stat_date &lt;= #{end}
-          and equip_type = #{equipType}
+        from cst_life_usage u
+        <include refid="lifeUsageWorkdayJoin"/>
+        where u.stat_date &gt;= #{start} and u.stat_date &lt;= #{end}
+          and u.equip_type = #{equipType}
         group by
         <choose>
-            <when test="groupBy == 'month'">date_format(stat_date, '%Y-%m'), use_dept</when>
-            <when test="groupBy == 'year'">date_format(stat_date, '%Y'), use_dept</when>
-            <otherwise>stat_date, use_dept</otherwise>
+            <when test="groupBy == 'month'">date_format(u.stat_date, '%Y-%m'), u.use_dept</when>
+            <when test="groupBy == 'year'">date_format(u.stat_date, '%Y'), u.use_dept</when>
+            <otherwise>u.stat_date, u.use_dept</otherwise>
         </choose>
         order by statPeriod, avgDailyCount desc
     </select>

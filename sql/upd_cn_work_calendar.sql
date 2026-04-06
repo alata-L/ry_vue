@@ -1,0 +1,3 @@
+-- 生命支持类统计依赖：中国大陆工作日历表
+-- 部署顺序：1) 执行 cst_cn_work_calendar.sql 建表  2) 执行 cst_cn_work_calendar_data.sql 导入 2010-2030 数据
+-- 年度更新：国务院公布新年度安排后，修改 sql/gen_cn_calendar.py 中 REST/WORK 集合，重新运行脚本生成数据 SQL 并替换导入（或 REPLACE INTO 单日）

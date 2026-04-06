@@ -37,6 +37,33 @@ http://localhost:8080/swagger-ui/index.html
 - Node.js 8.9+
 - npm 3.0+
 
+## 中国大陆工作日历（生命支持类统计）
+
+通用设备使用数据的**统计类接口**（按日/月/科室汇总等）仅统计 **`stat_date` 落在国务院办公厅规定工作日** 的上报行：周末、法定节假日整行不计；调休上班日按工作日计入。实现依赖表 `cst_cn_work_calendar` 与 `CstLifeUsageMapper` 中的 `INNER JOIN`。**列表、详情、上报、导出**不受此限制。
+
+### 部署步骤（必做）
+
+在业务库**依次**执行：
+
+1. `sql/cst_cn_work_calendar.sql` — 建表  
+2. `sql/cst_cn_work_calendar_data.sql` — 导入日历数据（文件较大，导入需稍候）
+
+未建表或未导入数据时，相关统计 SQL 会因 **JOIN 不到日历行** 而无结果或报错，请务必先执行。
+
+数据说明：`sql/cst_cn_work_calendar_data.sql` 由 `sql/gen_cn_calendar.py` 生成；**2010～2023** 暂按「周一至周五为工作日」近似；**2024～2026** 按国务院放假与调休；**2027～2030** 暂为周一至五/周末，待国务院公布后需重新生成。
+
+### 年度维护
+
+国务院发布新年度节假日安排后：
+
+1. 编辑 `sql/gen_cn_calendar.py` 中的放假区间（`REST`）与调休上班日（`WORK`）。  
+2. 在项目根目录执行：`python sql/gen_cn_calendar.py`  
+3. 用新生成的 `sql/cst_cn_work_calendar_data.sql` 更新数据库，任选其一：  
+   - 先 `TRUNCATE TABLE cst_cn_work_calendar;`，再执行新的 `cst_cn_work_calendar_data.sql`；  
+   - 或对变更日期使用 `REPLACE INTO cst_cn_work_calendar (cal_date, is_workday) VALUES (...)` 按日更新。
+
+补充说明见 `sql/upd_cn_work_calendar.sql`。
+
 ## Redis 安装（Windows）
 
 1. **下载 Redis for Windows**
@@ -68,6 +95,7 @@ http://localhost:8080/swagger-ui/index.html
    - `sql/ry_20250522.sql` - 主数据库脚本
    - `sql/quartz.sql` - 定时任务表
    - `sql/custom.sql` - 定制业务表（可选）
+   - `sql/cst_cn_work_calendar.sql` 与 `sql/cst_cn_work_calendar_data.sql` - 中国大陆工作日历（生命支持类设备统计按工作日汇总，**必做**，详见下文「中国大陆工作日历」）
 
 ### 2. 后端配置
 
