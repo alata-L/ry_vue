@@ -30,6 +30,9 @@ public class CstLifeUsage extends BaseEntity {
     @Excel(name = "当日使用台数")
     private Integer usedCount;
 
+    /** 该科室、该设备类型在通用设备台账中的装配台数（列表/详情查询时填充，非表字段） */
+    private Integer equipInstallCount;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Date getStatDate() { return statDate; }
@@ -40,4 +43,7 @@ public class CstLifeUsage extends BaseEntity {
     public void setUseDept(String useDept) { this.useDept = useDept; }
     public Integer getUsedCount() { return usedCount; }
     public void setUsedCount(Integer usedCount) { this.usedCount = usedCount; }
+
+    public Integer getEquipInstallCount() { return equipInstallCount; }
+    public void setEquipInstallCount(Integer equipInstallCount) { this.equipInstallCount = equipInstallCount; }
 }

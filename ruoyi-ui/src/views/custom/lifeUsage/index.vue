@@ -51,6 +51,16 @@
           <dict-tag :options="dict.type.cst_use_dept" :value="scope.row.useDept" />
         </template>
       </el-table-column>
+      <el-table-column align="center" width="108">
+        <template slot="header">
+          <el-tooltip content="该科室、该设备类型在「通用设备」台账中的装配台数（有效设备 status=正常）" placement="top">
+            <span>装配台数 <i class="el-icon-question" style="color:#909399;font-size:12px" /></span>
+          </el-tooltip>
+        </template>
+        <template slot-scope="scope">
+          <span>{{ displayEquipInstallCount(scope.row) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="当日使用台数" align="center" prop="usedCount" width="110" />
       <el-table-column label="操作" align="center" width="140" class-name="small-padding fixed-width">
         <template slot-scope="scope">
@@ -134,10 +144,36 @@ export default {
       const p = row && row.params
       return (p && p.createByNickName) || (row && row.createByNickName) || (row && row.createBy) || '—'
     },
+    /**
+     * 装配台数：优先 equipInstallCount；兼容蛇形 equip_install_count、params.equipInstallCount。
+     * 注意：若接口 JSON 中完全没有该字段，需部署含子查询的 ruoyi-custom 并重启后端。
+     */
+    displayEquipInstallCount(row) {
+      if (!row) return '—'
+      const p = row.params
+      const v =
+        row.equipInstallCount !== undefined && row.equipInstallCount !== null && row.equipInstallCount !== ''
+          ? row.equipInstallCount
+          : (row.equip_install_count !== undefined && row.equip_install_count !== null && row.equip_install_count !== ''
+            ? row.equip_install_count
+            : (p && p.equipInstallCount !== undefined && p.equipInstallCount !== null && p.equipInstallCount !== ''
+              ? p.equipInstallCount
+              : undefined))
+      if (v === undefined || v === null || v === '') return '—'
+      return v
+    },
     getList() {
       this.loading = true
       listLifeUsage(this.addDateRange(this.queryParams, this.dateRange)).then(res => {
-        this.list = res.rows
+        const rows = res.rows || []
+        // 统一驼峰，避免后端/网关返回 equip_install_count 时表格仍显示 —
+        this.list = rows.map(r => {
+          if (!r) return r
+          if (r.equipInstallCount === undefined && r.equip_install_count !== undefined) {
+            r.equipInstallCount = r.equip_install_count
+          }
+          return r
+        })
         this.total = res.total
         this.loading = false
       })

@@ -2,6 +2,7 @@ package com.ruoyi.web.controller.custom;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +40,9 @@ public class CstLifeUsageController extends BaseController {
     @Autowired
     private ICstReportUsageHistService reportUsageHistService;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @PreAuthorize("@ss.hasPermi('custom:lifeUsage:history:list')")
     @GetMapping("/history/list")
     public TableDataInfo historyList(CstReportUsageHist query) {
@@ -55,6 +59,7 @@ public class CstLifeUsageController extends BaseController {
     public TableDataInfo list(CstLifeUsage row) {
         startPage();
         List<CstLifeUsage> list = cstLifeUsageService.selectCstLifeUsageList(row);
+        fillEquipInstallCount(list);
         createByNickNameHelper.fillLifeUsage(list);
         return getDataTable(list);
     }
@@ -63,6 +68,7 @@ public class CstLifeUsageController extends BaseController {
     @GetMapping("/{id}")
     public AjaxResult getInfo(@PathVariable Long id) {
         CstLifeUsage row = cstLifeUsageService.selectCstLifeUsageById(id);
+        fillEquipInstallCount(row);
         createByNickNameHelper.fillLifeUsage(row);
         return success(row);
     }
@@ -93,5 +99,35 @@ public class CstLifeUsageController extends BaseController {
     @GetMapping("/sum")
     public AjaxResult sumUsage(String useDept, String equipType, String beginTime, String endTime, String groupBy) {
         return success(cstLifeUsageService.sumUsageByRange(useDept, equipType, beginTime, endTime, groupBy));
+    }
+
+    /**
+     * 装配台数（cst_life_equip 同科室+同 equip_type、status=0 条数）。放在 admin 层用 JdbcTemplate 查询，
+     * 避免仅编译 ruoyi-admin 时仍使用本地仓库中旧的 ruoyi-custom.jar 导致不生效。
+     */
+    private void fillEquipInstallCount(List<CstLifeUsage> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+        for (CstLifeUsage u : list) {
+            fillEquipInstallCount(u);
+        }
+    }
+
+    private void fillEquipInstallCount(CstLifeUsage u) {
+        if (u == null) {
+            return;
+        }
+        int n = 0;
+        String ud = u.getUseDept() != null ? u.getUseDept().trim() : "";
+        String et = u.getEquipType() != null ? u.getEquipType().trim() : "";
+        if (!ud.isEmpty() && !et.isEmpty()) {
+            Integer c = jdbcTemplate.queryForObject(
+                "select count(*) from cst_life_equip where status = '0' and use_dept = ? and equip_type = ?",
+                Integer.class, ud, et);
+            n = c != null ? c : 0;
+        }
+        // 仅写入 params：本地 .m2 中 ruoyi-custom 若为旧版可能无 equipInstallCount 字段，避免编译失败；前端已读 params.equipInstallCount
+        u.getParams().put("equipInstallCount", n);
     }
 }

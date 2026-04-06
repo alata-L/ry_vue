@@ -15,6 +15,7 @@
         <result property="remark"     column="remark"    />
     </resultMap>
 
+    <!-- 装配台数在 Service 中按 CstLifeEquipMapper 统计后写入 equipInstallCount，避免仅依赖 XML 子查询未被打进部署包 -->
     <sql id="selectCstLifeUsageVo">
         select id, stat_date, equip_type, use_dept, used_count, create_by, create_time, update_by, update_time, remark from cst_life_usage
     </sql>
