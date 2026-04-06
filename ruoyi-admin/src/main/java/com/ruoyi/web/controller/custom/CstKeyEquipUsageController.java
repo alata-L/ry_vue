@@ -2,6 +2,7 @@ package com.ruoyi.web.controller.custom;
 
 import java.util.Collections;
 import java.util.List;
+import javax.servlet.http.HttpServletResponse;
 import com.github.pagehelper.PageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +21,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.custom.domain.CstKeyEquip;
 import com.ruoyi.custom.domain.CstKeyEquipUsage;
 import com.ruoyi.custom.domain.CstReportUsageHist;
@@ -78,6 +80,16 @@ public class CstKeyEquipUsageController extends BaseController {
             clearPage();
         }
         return success(list);
+    }
+
+    @Log(title = "重点设备上报", businessType = BusinessType.EXPORT)
+    @PreAuthorize("@ss.hasPermi('custom:keyUsage:export')")
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, CstKeyEquipUsage row) {
+        List<CstKeyEquipUsage> list = cstKeyEquipUsageService.selectCstKeyEquipUsageList(row);
+        createByNickNameHelper.fillKeyEquipUsage(list);
+        ExcelUtil<CstKeyEquipUsageExport> util = new ExcelUtil<>(CstKeyEquipUsageExport.class);
+        util.exportExcel(response, CstKeyEquipUsageExport.fromFilledRows(list), "使用统计");
     }
 
     @PreAuthorize("@ss.hasPermi('custom:keyUsage:list')")

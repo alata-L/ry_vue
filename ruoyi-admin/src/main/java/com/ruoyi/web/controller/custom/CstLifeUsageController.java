@@ -1,6 +1,7 @@
 package com.ruoyi.web.controller.custom;
 
 import java.util.List;
+import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +18,7 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.custom.domain.CstLifeUsage;
 import com.ruoyi.custom.domain.CstReportUsageHist;
 import com.ruoyi.custom.service.ICstLifeUsageService;
@@ -52,6 +54,17 @@ public class CstLifeUsageController extends BaseController {
         createByNickNameHelper.fillReportUsageHistReporterNick(list);
         createByNickNameHelper.fillReportUsageHistUseDeptDisplay(list);
         return getDataTable(list);
+    }
+
+    @Log(title = "通用设备使用上报", businessType = BusinessType.EXPORT)
+    @PreAuthorize("@ss.hasPermi('custom:lifeUsage:export')")
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, CstLifeUsage row) {
+        List<CstLifeUsage> list = cstLifeUsageService.selectCstLifeUsageList(row);
+        fillEquipInstallCount(list);
+        createByNickNameHelper.fillLifeUsage(list);
+        ExcelUtil<CstLifeUsageExport> util = new ExcelUtil<>(CstLifeUsageExport.class);
+        util.exportExcel(response, CstLifeUsageExport.fromFilledRows(list), "使用数据");
     }
 
     @PreAuthorize("@ss.hasPermi('custom:lifeUsage:list')")

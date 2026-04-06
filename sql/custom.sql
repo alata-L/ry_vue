@@ -195,6 +195,7 @@ INSERT INTO sys_menu VALUES(2011, '使用数据查询', 2010, 1, '', '', '', '',
 INSERT INTO sys_menu VALUES(2012, '使用数据新增', 2010, 2, '', '', '', '', 1, 0, 'F', '0', '0', 'custom:lifeUsage:add', '#', 'admin', sysdate(), '', NULL, '');
 INSERT INTO sys_menu VALUES(2013, '使用数据修改', 2010, 3, '', '', '', '', 1, 0, 'F', '0', '0', 'custom:lifeUsage:edit', '#', 'admin', sysdate(), '', NULL, '');
 INSERT INTO sys_menu VALUES(2014, '使用数据删除', 2010, 4, '', '', '', '', 1, 0, 'F', '0', '0', 'custom:lifeUsage:remove', '#', 'admin', sysdate(), '', NULL, '');
+INSERT INTO sys_menu VALUES(2015, '使用数据导出', 2010, 5, '', '', '', '', 1, 0, 'F', '0', '0', 'custom:lifeUsage:export', '#', 'admin', sysdate(), '', NULL, '');
 
 INSERT INTO sys_menu VALUES(2020, '通用设备统计', 2000, 3, 'lifeStats', 'custom/lifeStats/index', '', '', 1, 0, 'C', '0', '0', 'custom:lifeStats:list', 'chart', 'admin', sysdate(), '', NULL, '科室/全院维度统计');
 
@@ -211,6 +212,7 @@ INSERT INTO sys_menu VALUES(2041, '使用统计查询', 2040, 1, '', '', '', '',
 INSERT INTO sys_menu VALUES(2042, '使用统计新增', 2040, 2, '', '', '', '', 1, 0, 'F', '0', '0', 'custom:keyUsage:add', '#', 'admin', sysdate(), '', NULL, '');
 INSERT INTO sys_menu VALUES(2043, '使用统计修改', 2040, 3, '', '', '', '', 1, 0, 'F', '0', '0', 'custom:keyUsage:edit', '#', 'admin', sysdate(), '', NULL, '');
 INSERT INTO sys_menu VALUES(2044, '使用统计删除', 2040, 4, '', '', '', '', 1, 0, 'F', '0', '0', 'custom:keyUsage:remove', '#', 'admin', sysdate(), '', NULL, '');
+INSERT INTO sys_menu VALUES(2070, '使用统计导出', 2040, 5, '', '', '', '', 1, 0, 'F', '0', '0', 'custom:keyUsage:export', '#', 'admin', sysdate(), '', NULL, '');
 
 INSERT INTO sys_menu VALUES(2045, '重点设备统计', 2000, 6, 'keyStats', 'custom/keyStats/index', '', '', 1, 0, 'C', '0', '0', 'custom:keyEquip:list', 'chart', 'admin', sysdate(), '', NULL, '科室/设备/时序统计');
 
