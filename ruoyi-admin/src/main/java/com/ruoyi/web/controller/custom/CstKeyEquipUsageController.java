@@ -15,11 +15,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.custom.domain.CstKeyEquip;
@@ -89,6 +91,83 @@ public class CstKeyEquipUsageController extends BaseController {
             clearPage();
         }
         return success(list);
+    }
+
+    @Log(title = "重点设备上报", businessType = BusinessType.IMPORT)
+    @PreAuthorize("@ss.hasPermi('custom:keyUsage:import')")
+    @PostMapping("/importData")
+    public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception {
+        if (file == null || file.isEmpty()) {
+            return error("上传文件不能为空");
+        }
+        ExcelUtil<CstKeyEquipUsageImportRow> util = new ExcelUtil<>(CstKeyEquipUsageImportRow.class);
+        List<CstKeyEquipUsageImportRow> rows = util.importExcel(file.getInputStream());
+        if (rows == null || rows.isEmpty()) {
+            throw new ServiceException("导入数据不能为空");
+        }
+        int successNum = 0;
+        int failureNum = 0;
+        StringBuilder failureMsg = new StringBuilder();
+        for (int i = 0; i < rows.size(); i++) {
+            CstKeyEquipUsageImportRow r = rows.get(i);
+            int line = i + 2;
+            try {
+                String reportDate = normalizeReportDate(r.getReportDate());
+                String equipNo = r.getEquipNo() != null ? r.getEquipNo().trim() : "";
+                if (StringUtils.isEmpty(reportDate)) {
+                    failureNum++;
+                    failureMsg.append("<br/>").append(line).append("、上报日期不能为空");
+                    continue;
+                }
+                if (StringUtils.isEmpty(equipNo)) {
+                    failureNum++;
+                    failureMsg.append("<br/>").append(line).append("、设备编号不能为空");
+                    continue;
+                }
+                CstKeyEquip eq = cstKeyEquipService.selectCstKeyEquipByEquipNo(equipNo);
+                if (eq == null) {
+                    failureNum++;
+                    failureMsg.append("<br/>").append(line).append("、设备编号 ").append(equipNo).append(" 在重点设备台账中不存在");
+                    continue;
+                }
+                CstKeyEquipUsage usage = new CstKeyEquipUsage();
+                usage.setId(null);
+                usage.setEquipId(eq.getId());
+                usage.setReportDate(reportDate);
+                usage.setWorkHours(r.getWorkHours());
+                usage.setWeekWorkDays(r.getWeekWorkDays());
+                usage.setTreatCount(r.getTreatCount());
+                usage.setUnitChargePrice(r.getUnitChargePrice());
+                if (!validateKeyUsageEquipDept(usage)) {
+                    failureNum++;
+                    failureMsg.append("<br/>").append(line).append("、无权限为该设备所属科室上报");
+                    continue;
+                }
+                CstKeyEquipUsage exist = cstKeyEquipUsageService.selectByEquipIdAndReportDate(eq.getId(), reportDate);
+                if (exist != null && !updateSupport) {
+                    failureNum++;
+                    failureMsg.append("<br/>").append(line).append("、该设备在 ").append(reportDate).append(" 已有上报，请勾选「更新已存在」或删除后重试");
+                    continue;
+                }
+                cstKeyEquipUsageService.saveCstKeyEquipUsage(usage);
+                successNum++;
+            } catch (Exception e) {
+                failureNum++;
+                failureMsg.append("<br/>").append(line).append("、导入失败：").append(e.getMessage());
+            }
+        }
+        if (failureNum > 0) {
+            failureMsg.insert(0, "导入完成：成功 " + successNum + " 条，失败 " + failureNum + " 条。错误如下：");
+            throw new ServiceException(failureMsg.toString());
+        }
+        return success("恭喜您，数据已全部导入成功！共 " + successNum + " 条");
+    }
+
+    @PostMapping("/importTemplate")
+    @PreAuthorize("@ss.hasPermi('custom:keyUsage:import')")
+    public void importTemplate(HttpServletResponse response) {
+        ExcelUtil<CstKeyEquipUsageImportRow> util = new ExcelUtil<>(CstKeyEquipUsageImportRow.class);
+        util.importTemplateExcel(response, "重点设备上报导入模板");
     }
 
     @Log(title = "重点设备上报", businessType = BusinessType.EXPORT)
@@ -172,6 +251,17 @@ public class CstKeyEquipUsageController extends BaseController {
             }
         }
         return toAjax(cstKeyEquipUsageService.deleteCstKeyEquipUsageByIds(ids));
+    }
+
+    private static String normalizeReportDate(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        String s = raw.trim();
+        if (s.length() >= 10) {
+            return s.substring(0, 10);
+        }
+        return s;
     }
 
     /** 按台账 use_dept 校验 equipId 所属科室 */

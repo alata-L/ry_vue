@@ -14,6 +14,9 @@ public interface ICstKeyEquipService {
 
     CstKeyEquip selectCstKeyEquipById(Long id);
 
+    /** 按设备编号精确匹配（导入上报用） */
+    CstKeyEquip selectCstKeyEquipByEquipNo(String equipNo);
+
     int insertCstKeyEquip(CstKeyEquip row);
 
     int updateCstKeyEquip(CstKeyEquip row);

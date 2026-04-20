@@ -6,34 +6,34 @@
       <!-- 饼图 + 汇总卡片 -->
       <div class="stats-section">
         <h3 class="section-title">收费统计</h3>
-        <el-row :gutter="16">
-          <el-col :span="8">
+        <el-row :gutter="16" class="charge-summary-row">
+          <el-col :xs="24" :lg="8">
             <div ref="chargePieChart" class="chart-container chart-pie"></div>
           </el-col>
-          <el-col :span="16">
+          <el-col :xs="24" :lg="16">
             <el-row :gutter="16" class="summary-cards">
-              <el-col :span="6">
+              <el-col :xs="12" :sm="12" :md="6">
                 <el-card shadow="hover" class="summary-card">
                   <div class="card-label">今年收费</div>
                   <div class="card-value">{{ formatMoney(summary.chargeThisYear) }}</div>
                   <div class="card-unit">元</div>
                 </el-card>
               </el-col>
-              <el-col :span="6">
+              <el-col :xs="12" :sm="12" :md="6">
                 <el-card shadow="hover" class="summary-card">
                   <div class="card-label">去年收费</div>
                   <div class="card-value">{{ formatMoney(summary.chargeLastYear) }}</div>
                   <div class="card-unit">元</div>
                 </el-card>
               </el-col>
-              <el-col :span="6">
+              <el-col :xs="12" :sm="12" :md="6">
                 <el-card shadow="hover" class="summary-card">
                   <div class="card-label">今年诊治例数</div>
                   <div class="card-value">{{ summary.treatThisYear || 0 }}</div>
                   <div class="card-unit">例</div>
                 </el-card>
               </el-col>
-              <el-col :span="6">
+              <el-col :xs="12" :sm="12" :md="6">
                 <el-card shadow="hover" class="summary-card">
                   <div class="card-label">去年诊治例数</div>
                   <div class="card-value">{{ summary.treatLastYear || 0 }}</div>
@@ -52,7 +52,8 @@
       <!-- 数据表格 -->
       <div class="stats-section">
         <h3 class="section-title">设备明细</h3>
-        <el-table :data="equipList" border size="small" class="mt16">
+        <div class="table-scroll">
+        <el-table :data="equipList" border size="small" class="mt16 dept-equip-table">
           <el-table-column label="设备编号" prop="equipNo" min-width="120">
             <template slot-scope="scope">
               <el-link type="primary" :underline="false" @click="goEquipDetail(scope.row)">{{ scope.row.equipNo }}</el-link>
@@ -76,6 +77,7 @@
           <el-table-column label="今年诊治例数" prop="treatThisYear" width="120" align="right" />
           <el-table-column label="去年诊治例数" prop="treatLastYear" width="120" align="right" />
         </el-table>
+        </div>
       </div>
     </template>
   </div>
@@ -212,30 +214,45 @@ export default {
               color: '#909399',
               fontSize: 14
             }
-          }
-        })
+          },
+          legend: { show: false },
+          series: [{ type: 'pie', data: [] }]
+        }, { notMerge: true })
         return
       }
-      
+
+      const narrow = typeof window !== 'undefined' && window.innerWidth < 768
+
       chart.setOption({
+        title: { show: false },
         tooltip: {
           trigger: 'item',
           formatter: '{a} <br/>{b}: {c} 元 ({d}%)'
         },
-        legend: {
-          orient: 'vertical',
-          left: 'left',
-          bottom: '10%',
-          data: data.map(item => item.name),
-          textStyle: {
-            fontSize: 12
+        legend: narrow
+          ? {
+            orient: 'horizontal',
+            left: 'center',
+            bottom: 4,
+            itemWidth: 10,
+            itemHeight: 10,
+            data: data.map(item => item.name),
+            textStyle: { fontSize: 10 }
           }
-        },
+          : {
+            orient: 'vertical',
+            left: 'left',
+            bottom: '10%',
+            data: data.map(item => item.name),
+            textStyle: {
+              fontSize: 12
+            }
+          },
         series: [{
           name: '今年收费',
           type: 'pie',
-          radius: ['40%', '70%'],
-          center: ['60%', '50%'],
+          radius: narrow ? ['32%', '56%'] : ['40%', '70%'],
+          center: narrow ? ['50%', '44%'] : ['60%', '50%'],
           avoidLabelOverlap: false,
           itemStyle: {
             borderRadius: 10,
@@ -243,7 +260,7 @@ export default {
             borderWidth: 2
           },
           label: {
-            show: true,
+            show: !narrow,
             formatter: function(params) {
               const name = params.name.length > 8 ? params.name.substring(0, 8) + '...' : params.name
               return name + '\n' + params.value.toFixed(2) + ' 元\n(' + params.percent + '%)'
@@ -258,7 +275,7 @@ export default {
           },
           data: data
         }]
-      })
+      }, { notMerge: true })
     },
     // 初始化收费对比柱状图
     initChargeBarChart() {
@@ -284,8 +301,24 @@ export default {
       })
       const thisYearData = sortedList.map(item => Number(item.chargeThisYear) || 0)
       const lastYearData = sortedList.map(item => Number(item.chargeLastYear) || 0)
-      
+
+      if (sortedList.length === 0) {
+        chart.setOption({
+          title: {
+            text: '暂无数据',
+            left: 'center',
+            top: 'center',
+            textStyle: { color: '#909399', fontSize: 14 }
+          },
+          series: []
+        }, { notMerge: true })
+        return
+      }
+
+      const narrow = typeof window !== 'undefined' && window.innerWidth < 768
+
       chart.setOption({
+        title: { show: false },
         tooltip: {
           trigger: 'axis',
           axisPointer: { type: 'cross' },
@@ -303,9 +336,9 @@ export default {
           top: 10
         },
         grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '15%',
+          left: narrow ? '2%' : '3%',
+          right: narrow ? '2%' : '4%',
+          bottom: narrow ? '36%' : '15%',
           top: '15%',
           containLabel: true
         },
@@ -313,9 +346,9 @@ export default {
           type: 'category',
           data: xAxisData,
           axisLabel: {
-            rotate: 45,
+            rotate: narrow ? 60 : 45,
             interval: 0,
-            fontSize: 12
+            fontSize: narrow ? 10 : 12
           }
         },
         yAxis: {
@@ -347,7 +380,7 @@ export default {
             }
           }
         ]
-      })
+      }, { notMerge: true })
     },
     // 更新所有图表
     updateCharts() {
@@ -392,6 +425,8 @@ export default {
           this[name].resize()
         }
       })
+      this.updateChargePieChart()
+      this.updateChargeBarChart()
     },
     // 销毁所有图表
     destroyCharts() {
@@ -459,6 +494,31 @@ export default {
   &.chart-pie {
     height: 300px;
   }
+}
+.charge-summary-row .el-col {
+  margin-bottom: 8px;
+}
+@media (min-width: 1200px) {
+  .charge-summary-row .el-col {
+    margin-bottom: 0;
+  }
+}
+@media (max-width: 767px) {
+  .chart-container.chart-pie {
+    height: 280px;
+    min-height: 260px;
+  }
+  .summary-card .card-value {
+    font-size: 18px;
+  }
+}
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll .dept-equip-table {
+  min-width: 920px;
 }
 .mt16 {
   margin-top: 16px;

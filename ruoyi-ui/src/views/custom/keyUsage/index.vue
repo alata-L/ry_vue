@@ -31,6 +31,9 @@
       <el-col :span="1.5">
         <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport" v-hasPermi="['custom:keyUsage:export']">导出</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <el-button type="info" plain icon="el-icon-upload2" size="mini" @click="handleImport" v-hasPermi="['custom:keyUsage:import']">导入</el-button>
+      </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
@@ -99,12 +102,31 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog :title="upload.title" :visible.sync="upload.open" width="400px" append-to-body>
+      <el-upload ref="upload" :limit="1" accept=".xlsx, .xls" :headers="upload.headers" :action="upload.url + '?updateSupport=' + upload.updateSupport" :disabled="upload.isUploading" :on-progress="handleFileUploadProgress" :on-success="handleFileSuccess" :auto-upload="false" drag>
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+        <div class="el-upload__tip text-center" slot="tip">
+          <div class="el-upload__tip" slot="tip">
+            <el-checkbox v-model="upload.updateSupport" />若该设备该日期已上报则更新（否则跳过已存在行）
+          </div>
+          <span>列：上报日期、设备编号、工作时间、每周工作天数、日均服务例数、收费价格（设备编号须与重点设备台账一致）。</span>
+          <el-link type="primary" :underline="false" style="font-size: 12px; vertical-align: baseline" @click="importTemplate">下载模板</el-link>
+        </div>
+      </el-upload>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitFileForm">确 定</el-button>
+        <el-button @click="upload.open = false">取 消</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { listKeyUsage, getKeyUsage, addKeyUsage, updateKeyUsage, delKeyUsage, listKeyEquipsForUsage } from '@/api/custom/keyUsage'
 import { getInfo } from '@/api/login'
+import { getToken } from '@/utils/auth'
 
 export default {
   name: 'KeyUsage',
@@ -127,6 +149,14 @@ export default {
         useDept: [{ required: true, message: '请选择使用科室', trigger: 'change' }],
         equipId: [{ required: true, message: '请选择重点设备', trigger: 'change' }],
         reportDate: [{ required: true, message: '请选择上报日期', trigger: 'change' }]
+      },
+      upload: {
+        open: false,
+        title: '',
+        isUploading: false,
+        updateSupport: false,
+        headers: { Authorization: 'Bearer ' + getToken() },
+        url: process.env.VUE_APP_BASE_API + '/custom/keyUsage/importData'
       }
     }
   },
@@ -205,7 +235,7 @@ export default {
         }
       })
       this.open = true
-      this.title = '新增使用统计'
+      this.title = '新增上报数据'
     },
     handleUpdate(row) {
       this.reset()
@@ -214,7 +244,7 @@ export default {
         this.form = res.data
         this.loadKeyEquipByDept(this.form.useDept)
         this.open = true
-        this.title = '修改使用统计'
+        this.title = '修改上报数据'
       })
     },
     submitForm() {
@@ -247,6 +277,26 @@ export default {
     },
     handleExport() {
       this.download('custom/keyUsage/export', { ...this.queryParams }, `重点设备上报_${new Date().getTime()}.xlsx`)
+    },
+    handleImport() {
+      this.upload.title = '重点设备上报导入'
+      this.upload.open = true
+    },
+    importTemplate() {
+      this.download('custom/keyUsage/importTemplate', {}, `重点设备上报导入模板_${new Date().getTime()}.xlsx`)
+    },
+    handleFileUploadProgress() {
+      this.upload.isUploading = true
+    },
+    handleFileSuccess(response, file, fileList) {
+      this.upload.open = false
+      this.upload.isUploading = false
+      this.$refs.upload.clearFiles()
+      this.$alert('<div style="overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;">' + response.msg + '</div>', '导入结果', { dangerouslyUseHTMLString: true })
+      this.getList()
+    },
+    submitFileForm() {
+      this.$refs.upload.submit()
     }
   }
 }

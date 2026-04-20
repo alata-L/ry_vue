@@ -42,6 +42,11 @@ public class CstLifeUsageServiceImpl implements ICstLifeUsageService {
     }
 
     @Override
+    public CstLifeUsage selectCstLifeUsageByUnique(String statDate, String equipType, String useDept) {
+        return cstLifeUsageMapper.selectCstLifeUsageByUnique(statDate, equipType, useDept);
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public int saveCstLifeUsage(CstLifeUsage row) {
         if (row.getId() != null) {

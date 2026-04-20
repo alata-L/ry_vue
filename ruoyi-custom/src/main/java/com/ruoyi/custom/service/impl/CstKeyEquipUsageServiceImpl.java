@@ -35,6 +35,11 @@ public class CstKeyEquipUsageServiceImpl implements ICstKeyEquipUsageService {
     }
 
     @Override
+    public CstKeyEquipUsage selectByEquipIdAndReportDate(Long equipId, String reportDate) {
+        return cstKeyEquipUsageMapper.selectByEquipIdAndReportDate(equipId, reportDate);
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public int saveCstKeyEquipUsage(CstKeyEquipUsage row) {
         if (row.getId() != null) {

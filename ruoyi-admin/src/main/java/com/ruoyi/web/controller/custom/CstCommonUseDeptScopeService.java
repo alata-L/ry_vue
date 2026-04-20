@@ -14,13 +14,15 @@ import com.ruoyi.custom.domain.UseDeptScope;
 import com.ruoyi.system.mapper.SysUserUseDeptMapper;
 
 /**
- * 数据范围：仅当用户具备 common、且不具备 manger 时，限制为本人「所属科室」（sys_user_use_dept / use_dept）。
+ * 数据范围：仅当用户具备 common-equipment 或 major-equipment、且不具备 manger 时，
+ * 限制为本人「所属科室」（sys_user_use_dept / use_dept）。
  * 若同时分配了 manger（管理员类角色），则不按科室过滤，与全院管理一致。
  */
 @Component
 public class CstCommonUseDeptScopeService {
 
-    public static final String ROLE_COMMON = "common";
+    public static final String ROLE_COMMON_EQUIPMENT = "common-equipment";
+    public static final String ROLE_MAJOR_EQUIPMENT = "major-equipment";
 
     /** 与角色管理中「管理员」权限字符一致（若库中改名需同步） */
     public static final String ROLE_MANGER = "manger";
@@ -36,7 +38,7 @@ public class CstCommonUseDeptScopeService {
         if (SecurityUtils.hasRole(ROLE_MANGER)) {
             return false;
         }
-        return SecurityUtils.hasRole(ROLE_COMMON);
+        return SecurityUtils.hasRole(ROLE_COMMON_EQUIPMENT) || SecurityUtils.hasRole(ROLE_MAJOR_EQUIPMENT);
     }
 
     /**

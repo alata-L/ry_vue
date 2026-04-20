@@ -43,13 +43,19 @@
         </el-col>
         <el-col :xs="24" :lg="12">
           <el-card shadow="hover" class="chart-card">
-            <div slot="header" class="chart-header">
-              <span class="chart-title">监护仪科室日均使用排名TOP5（今年）</span>
-              <el-select v-model="lifeGroupBy.monitorRank" @change="onLifeGroupByChange('monitorRank')" size="small" style="width: 100px; margin-left: 10px;">
-                <el-option label="按日" value="day" />
-                <el-option label="按月" value="month" />
-                <el-option label="按年" value="year" />
-              </el-select>
+            <div slot="header">
+              <div class="chart-header">
+                <span class="chart-title">监护仪科室日均使用排名TOP5（今年）</span>
+                <el-select v-model="lifeGroupBy.monitorRank" @change="onLifeGroupByChange('monitorRank')" size="small" style="width: 100px; margin-left: 10px;">
+                  <el-option label="按日" value="day" />
+                  <el-option label="按月" value="month" />
+                  <el-option label="按年" value="year" />
+                </el-select>
+              </div>
+              <div class="chart-rank-meta">
+                <div class="chart-rank-period">{{ lifeRankFocusLabel.monitor }}</div>
+                <div class="chart-rank-hint">{{ rankChartHint('monitorRank') }}</div>
+              </div>
             </div>
             <div ref="chartLifeMonitorRank" class="chart-container" />
           </el-card>
@@ -71,13 +77,19 @@
         </el-col>
         <el-col :xs="24" :lg="12">
           <el-card shadow="hover" class="chart-card">
-            <div slot="header" class="chart-header">
-              <span class="chart-title">输液泵科室日均使用排名TOP5（今年）</span>
-              <el-select v-model="lifeGroupBy.infusionPumpRank" @change="onLifeGroupByChange('infusionPumpRank')" size="small" style="width: 100px; margin-left: 10px;">
-                <el-option label="按日" value="day" />
-                <el-option label="按月" value="month" />
-                <el-option label="按年" value="year" />
-              </el-select>
+            <div slot="header">
+              <div class="chart-header">
+                <span class="chart-title">输液泵科室日均使用排名TOP5（今年）</span>
+                <el-select v-model="lifeGroupBy.infusionPumpRank" @change="onLifeGroupByChange('infusionPumpRank')" size="small" style="width: 100px; margin-left: 10px;">
+                  <el-option label="按日" value="day" />
+                  <el-option label="按月" value="month" />
+                  <el-option label="按年" value="year" />
+                </el-select>
+              </div>
+              <div class="chart-rank-meta">
+                <div class="chart-rank-period">{{ lifeRankFocusLabel.infusionPump }}</div>
+                <div class="chart-rank-hint">{{ rankChartHint('infusionPumpRank') }}</div>
+              </div>
             </div>
             <div ref="chartLifeInfusionPumpRank" class="chart-container" />
           </el-card>
@@ -99,13 +111,19 @@
         </el-col>
         <el-col :xs="24" :lg="12">
           <el-card shadow="hover" class="chart-card">
-            <div slot="header" class="chart-header">
-              <span class="chart-title">注射泵科室日均使用排名TOP5（今年）</span>
-              <el-select v-model="lifeGroupBy.syringePumpRank" @change="onLifeGroupByChange('syringePumpRank')" size="small" style="width: 100px; margin-left: 10px;">
-                <el-option label="按日" value="day" />
-                <el-option label="按月" value="month" />
-                <el-option label="按年" value="year" />
-              </el-select>
+            <div slot="header">
+              <div class="chart-header">
+                <span class="chart-title">注射泵科室日均使用排名TOP5（今年）</span>
+                <el-select v-model="lifeGroupBy.syringePumpRank" @change="onLifeGroupByChange('syringePumpRank')" size="small" style="width: 100px; margin-left: 10px;">
+                  <el-option label="按日" value="day" />
+                  <el-option label="按月" value="month" />
+                  <el-option label="按年" value="year" />
+                </el-select>
+              </div>
+              <div class="chart-rank-meta">
+                <div class="chart-rank-period">{{ lifeRankFocusLabel.syringePump }}</div>
+                <div class="chart-rank-hint">{{ rankChartHint('syringePumpRank') }}</div>
+              </div>
             </div>
             <div ref="chartLifeSyringePumpRank" class="chart-container" />
           </el-card>
@@ -133,11 +151,13 @@ export default {
       },
       lifeGroupBy: {
         monitor: 'day',
-        monitorRank: 'day',
+        // 排名图标题为「今年」：按日/月时后端按每个 period 取 TOP5，前端只展示「最后一个 period」，
+        // 默认按日会变成「最近一日」的前五，常只有 1 条数据；默认按年与「今年全院排名」一致。
+        monitorRank: 'year',
         infusionPump: 'day',
-        infusionPumpRank: 'day',
+        infusionPumpRank: 'year',
         syringePump: 'day',
-        syringePumpRank: 'day'
+        syringePumpRank: 'year'
       },
       lifeTrendData: {
         monitor: [],
@@ -148,6 +168,12 @@ export default {
         monitor: [],
         infusionPump: [],
         syringePump: []
+      },
+      /** 排名图：当前柱状图对应的统计月/日/年（可读文案） */
+      lifeRankFocusLabel: {
+        monitor: '',
+        infusionPump: '',
+        syringePump: ''
       },
       chartLifeMonitor: null,
       chartLifeMonitorRank: null,
@@ -176,6 +202,46 @@ export default {
       const charts = [this.chartLifeMonitor, this.chartLifeMonitorRank, this.chartLifeInfusionPump, this.chartLifeInfusionPumpRank,
         this.chartLifeSyringePump, this.chartLifeSyringePumpRank]
       charts.forEach(ch => ch && ch.resize())
+    },
+    /** 将接口返回的 statPeriod 格式化为「当前展示：…年…月…日」等 */
+    formatLifeRankPeriodLabel(rawPeriod, groupBy) {
+      if (rawPeriod == null || String(rawPeriod).trim() === '') {
+        return ''
+      }
+      const s = String(rawPeriod).trim()
+      if (groupBy === 'year') {
+        const y4 = /^(\d{4})$/.exec(s)
+        if (y4) {
+          return `统计年度：${y4[1]}年（今年、工作日口径）`
+        }
+        return `统计年度：${s}`
+      }
+      if (groupBy === 'month') {
+        const m = /^(\d{4})-(\d{1,2})$/.exec(s)
+        if (m) {
+          return `当前展示月份：${m[1]}年${parseInt(m[2], 10)}月`
+        }
+        return `当前展示月份：${s}`
+      }
+      if (groupBy === 'day') {
+        const d = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s)
+        if (d) {
+          return `当前展示日期：${d[1]}年${parseInt(d[2], 10)}月${parseInt(d[3], 10)}日`
+        }
+        return `当前展示日期：${s}`
+      }
+      return ''
+    },
+    /** 排名图补充说明（具体月/日见上一行 lifeRankFocusLabel） */
+    rankChartHint(groupByKey) {
+      const gb = this.lifeGroupBy[groupByKey]
+      if (gb === 'year') {
+        return '「按年」：全年合并后取科室前五。'
+      }
+      if (gb === 'month') {
+        return '「按月」：取今年内有数据的最后一个自然月；上图仅为该月内科室前五（非全年合并）。'
+      }
+      return '「按日」：取今年内有数据的最后一个自然日；上图仅为该日内科室前五（非全年合并）。'
     },
     loadData() {
       Promise.allSettled([
@@ -279,10 +345,7 @@ export default {
     updateLifeRankChart(key) {
       const chartRef = 'chartLife' + key.charAt(0).toUpperCase() + key.slice(1) + 'Rank'
       const el = this.$refs[chartRef]
-      if (!el) return
-      if (this[chartRef]) this[chartRef].dispose()
-      this[chartRef] = echarts.init(el, 'macarons')
-      
+
       const data = this.lifeRankData[key] || []
       // 按period分组，每个period取TOP5
       const byPeriod = {}
@@ -293,10 +356,22 @@ export default {
         }
         byPeriod[period].push(item)
       })
-      
+
       // 取最新的period的TOP5
       const periods = Object.keys(byPeriod).sort()
       const latestPeriod = periods[periods.length - 1] || ''
+      const gb = this.lifeGroupBy[key + 'Rank']
+      if (!periods.length) {
+        this.$set(this.lifeRankFocusLabel, key, '今年内暂无排名数据（无工作日上报或当前条件下无数据）')
+      } else {
+        const focus = this.formatLifeRankPeriodLabel(latestPeriod, gb)
+        this.$set(this.lifeRankFocusLabel, key, focus || `当前统计周期：${latestPeriod}`)
+      }
+
+      if (!el) return
+      if (this[chartRef]) this[chartRef].dispose()
+      this[chartRef] = echarts.init(el, 'macarons')
+
       const top5 = (byPeriod[latestPeriod] || [])
         .sort((a, b) => (Number(b.avgDailyCount) || 0) - (Number(a.avgDailyCount) || 0))
         .slice(0, 5)
@@ -374,6 +449,23 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+.chart-rank-meta {
+  margin-top: 6px;
+}
+.chart-rank-period {
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+  line-height: 1.5;
+  padding-right: 4px;
+}
+.chart-rank-hint {
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.45;
+  margin-top: 4px;
+  padding-right: 4px;
 }
 .chart-container {
   height: 350px;

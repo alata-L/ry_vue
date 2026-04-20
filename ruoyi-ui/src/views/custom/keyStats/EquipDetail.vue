@@ -25,28 +25,28 @@
       <div class="stats-section">
         <h3 class="section-title">效率指标</h3>
         <el-row :gutter="16" class="summary-cards">
-          <el-col :span="6">
+          <el-col :xs="12" :sm="12" :lg="6">
             <el-card shadow="hover" class="summary-card">
               <div class="card-label">总工作时间</div>
               <div class="card-value">{{ summaryStats.totalWorkHours }}</div>
               <div class="card-unit">小时</div>
             </el-card>
           </el-col>
-          <el-col :span="6">
+          <el-col :xs="12" :sm="12" :lg="6">
             <el-card shadow="hover" class="summary-card">
               <div class="card-label">总服务例数</div>
               <div class="card-value">{{ summaryStats.totalTreatCount }}</div>
               <div class="card-unit">例</div>
             </el-card>
           </el-col>
-          <el-col :span="6">
+          <el-col :xs="12" :sm="12" :lg="6">
             <el-card shadow="hover" class="summary-card">
               <div class="card-label">总收费</div>
               <div class="card-value">{{ formatMoney(summaryStats.totalCharge) }}</div>
               <div class="card-unit">元</div>
             </el-card>
           </el-col>
-          <el-col :span="6">
+          <el-col :xs="12" :sm="12" :lg="6">
             <el-card shadow="hover" class="summary-card">
               <div class="card-label">平均每例收费</div>
               <div class="card-value">{{ formatMoney(summaryStats.avgChargePerCase) }}</div>
@@ -62,13 +62,13 @@
       </div>
       <!-- 第二行：柱状图 + 饼图 -->
       <el-row :gutter="16" class="stats-section-row">
-        <el-col :span="16">
+        <el-col :xs="24" :lg="16">
           <div class="stats-section">
             <h3 class="section-title">各周数据对比</h3>
             <div ref="barChart" class="chart-container" style="height: 350px;"></div>
           </div>
         </el-col>
-        <el-col :span="8">
+        <el-col :xs="24" :lg="8">
           <div class="stats-section">
             <h3 class="section-title">收费占比分析</h3>
             <div ref="pieChart" class="chart-container" style="height: 350px;"></div>
@@ -78,7 +78,8 @@
       <!-- 数据表格 -->
       <div class="stats-section">
         <h3 class="section-title">数据明细</h3>
-        <el-table :data="seriesList" border size="small" class="data-table">
+        <div class="table-scroll">
+        <el-table :data="seriesList" border size="small" class="data-table equip-series-table">
         <el-table-column :label="periodColumnLabel" prop="period" min-width="120">
           <template slot-scope="scope">{{ formatPeriod(scope.row.period) }}</template>
         </el-table-column>
@@ -99,6 +100,7 @@
           <template slot-scope="scope">{{ formatMoney(scope.row.avgChargePerCase) }}</template>
         </el-table-column>
       </el-table>
+        </div>
       </div>
     </template>
   </div>
@@ -358,11 +360,15 @@ export default {
               color: '#909399',
               fontSize: 14
             }
-          }
-        })
+          },
+          legend: { show: false },
+          series: []
+        }, { notMerge: true })
         return
       }
-      
+
+      const narrow = typeof window !== 'undefined' && window.innerWidth < 768
+
       // 准备X轴数据（周次）
       const xAxisData = this.seriesList.map(item => {
         const period = item.period || ''
@@ -383,6 +389,7 @@ export default {
       const totalChargeData = this.seriesList.map(item => Number(item.totalCharge) || 0)
       
       chart.setOption({
+        title: { show: false },
         tooltip: {
           trigger: 'axis',
           axisPointer: { type: 'cross' },
@@ -406,9 +413,9 @@ export default {
           top: 10
         },
         grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '10%',
+          left: narrow ? '2%' : '3%',
+          right: narrow ? '2%' : '4%',
+          bottom: narrow ? '30%' : '10%',
           top: '15%',
           containLabel: true
         },
@@ -417,9 +424,9 @@ export default {
           boundaryGap: false,
           data: xAxisData,
           axisLabel: {
-            rotate: 45,
+            rotate: narrow ? 55 : 45,
             interval: 0,
-            fontSize: 12
+            fontSize: narrow ? 10 : 12
           }
         },
         yAxis: [
@@ -474,7 +481,7 @@ export default {
             yAxisIndex: 1
           }
         ]
-      })
+      }, { notMerge: true })
     },
     // 初始化窗口大小变化监听
     initResizeListener() {
@@ -517,6 +524,9 @@ export default {
       if (this.pieChart) {
         this.pieChart.resize()
       }
+      this.updateTrendChart()
+      this.updateBarChart()
+      this.updatePieChart()
     },
     // 销毁图表
     destroyTrendChart() {
@@ -556,11 +566,15 @@ export default {
               color: '#909399',
               fontSize: 14
             }
-          }
-        })
+          },
+          legend: { show: false },
+          series: []
+        }, { notMerge: true })
         return
       }
-      
+
+      const narrow = typeof window !== 'undefined' && window.innerWidth < 768
+
       const xAxisData = this.seriesList.map(item => {
         const period = item.period || ''
         const parts = period.split('-')
@@ -575,6 +589,7 @@ export default {
       const totalChargeData = this.seriesList.map(item => Number(item.totalCharge) || 0)
       
       chart.setOption({
+        title: { show: false },
         tooltip: {
           trigger: 'axis',
           axisPointer: { type: 'shadow' },
@@ -598,9 +613,9 @@ export default {
           top: 10
         },
         grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '15%',
+          left: narrow ? '2%' : '3%',
+          right: narrow ? '2%' : '4%',
+          bottom: narrow ? '32%' : '15%',
           top: '15%',
           containLabel: true
         },
@@ -608,9 +623,9 @@ export default {
           type: 'category',
           data: xAxisData,
           axisLabel: {
-            rotate: 45,
+            rotate: narrow ? 55 : 45,
             interval: 0,
-            fontSize: 12
+            fontSize: narrow ? 10 : 12
           }
         },
         yAxis: [
@@ -659,7 +674,7 @@ export default {
             yAxisIndex: 1
           }
         ]
-      })
+      }, { notMerge: true })
     },
     // 初始化饼图
     initPieChart() {
@@ -684,11 +699,13 @@ export default {
               color: '#909399',
               fontSize: 14
             }
-          }
-        })
+          },
+          legend: { show: false },
+          series: [{ type: 'pie', data: [] }]
+        }, { notMerge: true })
         return
       }
-      
+
       // 计算总收费
       const totalCharge = this.seriesList.reduce((sum, item) => sum + (Number(item.totalCharge) || 0), 0)
       
@@ -702,10 +719,14 @@ export default {
               color: '#909399',
               fontSize: 14
             }
-          }
-        })
+          },
+          legend: { show: false },
+          series: [{ type: 'pie', data: [] }]
+        }, { notMerge: true })
         return
       }
+
+      const narrow = typeof window !== 'undefined' && window.innerWidth < 768
       
       // 准备饼图数据（只显示收费大于0的周）
       const data = this.seriesList
@@ -723,24 +744,35 @@ export default {
         .slice(0, 10) // 最多显示10个
       
       chart.setOption({
+        title: { show: false },
         tooltip: {
           trigger: 'item',
           formatter: '{a} <br/>{b}: {c} 元 ({d}%)'
         },
-        legend: {
-          orient: 'vertical',
-          left: 'left',
-          bottom: '10%',
-          data: data.map(item => item.name),
-          textStyle: {
-            fontSize: 11
+        legend: narrow
+          ? {
+            orient: 'horizontal',
+            left: 'center',
+            bottom: 4,
+            itemWidth: 10,
+            itemHeight: 10,
+            data: data.map(item => item.name),
+            textStyle: { fontSize: 10 }
           }
-        },
+          : {
+            orient: 'vertical',
+            left: 'left',
+            bottom: '10%',
+            data: data.map(item => item.name),
+            textStyle: {
+              fontSize: 11
+            }
+          },
         series: [{
           name: '收费占比',
           type: 'pie',
-          radius: ['40%', '70%'],
-          center: ['60%', '50%'],
+          radius: narrow ? ['32%', '56%'] : ['40%', '70%'],
+          center: narrow ? ['50%', '44%'] : ['60%', '50%'],
           avoidLabelOverlap: false,
           itemStyle: {
             borderRadius: 10,
@@ -748,7 +780,7 @@ export default {
             borderWidth: 2
           },
           label: {
-            show: true,
+            show: !narrow,
             formatter: function(params) {
               const name = params.name.length > 8 ? params.name.substring(0, 8) + '...' : params.name
               return name + '\n' + params.value.toFixed(2) + ' 元\n(' + params.percent + '%)'
@@ -764,7 +796,7 @@ export default {
           },
           data: data
         }]
-      })
+      }, { notMerge: true })
     }
   }
 }
@@ -843,5 +875,26 @@ export default {
 }
 .data-table {
   margin-top: 0;
+}
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll .equip-series-table {
+  min-width: 880px;
+}
+.stats-section-row .el-col {
+  margin-bottom: 8px;
+}
+@media (min-width: 1200px) {
+  .stats-section-row .el-col {
+    margin-bottom: 0;
+  }
+}
+@media (max-width: 767px) {
+  .summary-card .card-value {
+    font-size: 18px;
+  }
 }
 </style>

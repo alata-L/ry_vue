@@ -15,6 +15,9 @@ public interface ICstLifeUsageService {
 
     CstLifeUsage selectCstLifeUsageById(Long id);
 
+    /** 按 上报日期+设备类型+使用科室 唯一键查询（导入/校验用） */
+    CstLifeUsage selectCstLifeUsageByUnique(String statDate, String equipType, String useDept);
+
     int saveCstLifeUsage(CstLifeUsage row);
 
     int deleteCstLifeUsageByIds(Long[] ids);

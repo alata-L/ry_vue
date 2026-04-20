@@ -32,6 +32,14 @@ public class CstKeyEquipServiceImpl implements ICstKeyEquipService {
     }
 
     @Override
+    public CstKeyEquip selectCstKeyEquipByEquipNo(String equipNo) {
+        if (StringUtils.isEmpty(equipNo)) {
+            return null;
+        }
+        return cstKeyEquipMapper.selectCstKeyEquipByEquipNo(equipNo.trim());
+    }
+
+    @Override
     public int insertCstKeyEquip(CstKeyEquip row) {
         row.setCreateBy(SecurityUtils.getUsername());
         return cstKeyEquipMapper.insertCstKeyEquip(row);

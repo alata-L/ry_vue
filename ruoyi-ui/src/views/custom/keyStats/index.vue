@@ -6,42 +6,42 @@
         <el-tab-pane label="全部" name="all">
           <!-- 全部统计卡片 -->
           <el-row :gutter="16" class="summary-cards">
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">设备数量</div>
                 <div class="card-value">{{ getSummaryByTab('all').equipCount }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">设备价值</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('all').totalValue) }}</div>
                 <div class="card-unit">元</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">今月收费</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('all').chargeThisMonth) }}</div>
                 <div class="card-unit">元</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">上月收费</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('all').chargeLastMonth) }}</div>
                 <div class="card-unit">元</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">今年收费</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('all').chargeThisYear) }}</div>
                 <div class="card-unit">元</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">去年收费</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('all').chargeLastYear) }}</div>
@@ -50,6 +50,7 @@
             </el-col>
           </el-row>
           <!-- 全部表格 -->
+          <div class="table-scroll">
           <el-table :data="getTableDataByTab('all')" border size="small" class="mt16">
             <el-table-column label="科室" prop="useDept" min-width="240">
               <template slot-scope="scope">
@@ -77,46 +78,47 @@
             <el-table-column label="今年诊治例数" prop="treatThisYear" width="110" align="right" />
             <el-table-column label="去年诊治例数" prop="treatLastYear" width="110" align="right" />
           </el-table>
+          </div>
         </el-tab-pane>
         <el-tab-pane label="≥50万" name="50w">
           <!-- ≥50万统计卡片 -->
           <el-row :gutter="16" class="summary-cards">
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">设备数量</div>
                 <div class="card-value">{{ getSummaryByTab('50w').equipCount }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">设备价值</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('50w').totalValue) }}</div>
                 <div class="card-unit">元</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">今月收费</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('50w').chargeThisMonth) }}</div>
                 <div class="card-unit">元</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">上月收费</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('50w').chargeLastMonth) }}</div>
                 <div class="card-unit">元</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">今年收费</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('50w').chargeThisYear) }}</div>
                 <div class="card-unit">元</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">去年收费</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('50w').chargeLastYear) }}</div>
@@ -125,6 +127,7 @@
             </el-col>
           </el-row>
           <!-- ≥50万表格 -->
+          <div class="table-scroll">
           <el-table :data="getTableDataByTab('50w')" border size="small" class="mt16">
             <el-table-column label="科室" prop="useDept" min-width="240">
               <template slot-scope="scope">
@@ -152,46 +155,47 @@
             <el-table-column label="今年诊治例数" prop="treatThisYear" width="110" align="right" />
             <el-table-column label="去年诊治例数" prop="treatLastYear" width="110" align="right" />
           </el-table>
+          </div>
         </el-tab-pane>
         <el-tab-pane label="≥100万" name="100w">
           <!-- ≥100万统计卡片 -->
           <el-row :gutter="16" class="summary-cards">
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">设备数量</div>
                 <div class="card-value">{{ getSummaryByTab('100w').equipCount }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">设备价值</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('100w').totalValue) }}</div>
                 <div class="card-unit">元</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">今月收费</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('100w').chargeThisMonth) }}</div>
                 <div class="card-unit">元</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">上月收费</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('100w').chargeLastMonth) }}</div>
                 <div class="card-unit">元</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">今年收费</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('100w').chargeThisYear) }}</div>
                 <div class="card-unit">元</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">去年收费</div>
                 <div class="card-value">{{ formatMoney(getSummaryByTab('100w').chargeLastYear) }}</div>
@@ -200,6 +204,7 @@
             </el-col>
           </el-row>
           <!-- ≥100万表格 -->
+          <div class="table-scroll">
           <el-table :data="getTableDataByTab('100w')" border size="small" class="mt16">
             <el-table-column label="科室" prop="useDept" min-width="240">
               <template slot-scope="scope">
@@ -227,6 +232,7 @@
             <el-table-column label="今年诊治例数" prop="treatThisYear" width="110" align="right" />
             <el-table-column label="去年诊治例数" prop="treatLastYear" width="110" align="right" />
           </el-table>
+          </div>
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -354,5 +360,20 @@ export default {
 }
 .mt16 {
   margin-top: 16px;
+}
+/* 手机端：宽表横向滚动，避免列被裁切 */
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll :deep(.el-table) {
+  min-width: 920px;
+}
+@media (max-width: 768px) {
+  .summary-card .card-value {
+    font-size: 18px;
+    word-break: break-all;
+  }
 }
 </style>

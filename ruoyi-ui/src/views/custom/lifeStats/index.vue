@@ -6,35 +6,35 @@
         <el-tab-pane label="监护仪" name="1">
           <!-- 监护仪统计卡片 -->
           <el-row :gutter="16" class="summary-cards">
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">6年以下</div>
                 <div class="card-value">{{ getSummaryByType('1').cnt0 }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">6年以上</div>
                 <div class="card-value">{{ getSummaryByType('1').cnt6 }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">10年以上</div>
                 <div class="card-value">{{ getSummaryByType('1').cnt10 }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">15年以上</div>
                 <div class="card-value">{{ getSummaryByType('1').cnt15 }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card total">
                 <div class="card-label">合计</div>
                 <div class="card-value">{{ getSummaryByType('1').total }}</div>
@@ -43,6 +43,7 @@
             </el-col>
           </el-row>
           <!-- 监护仪表格 -->
+          <div class="table-scroll">
           <el-table :data="getTableDataByType('1')" border size="small" class="mt16">
             <el-table-column label="使用科室" prop="useDept" min-width="220">
               <template slot-scope="scope">
@@ -54,39 +55,40 @@
             <el-table-column label="10年以上" prop="cnt10" width="100" align="right" />
             <el-table-column label="15年以上" prop="cnt15" width="100" align="right" />
           </el-table>
+          </div>
         </el-tab-pane>
         <el-tab-pane label="输液泵" name="2">
           <!-- 输液泵统计卡片 -->
           <el-row :gutter="16" class="summary-cards">
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">6年以下</div>
                 <div class="card-value">{{ getSummaryByType('2').cnt0 }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">6年以上</div>
                 <div class="card-value">{{ getSummaryByType('2').cnt6 }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">10年以上</div>
                 <div class="card-value">{{ getSummaryByType('2').cnt10 }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">15年以上</div>
                 <div class="card-value">{{ getSummaryByType('2').cnt15 }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card total">
                 <div class="card-label">合计</div>
                 <div class="card-value">{{ getSummaryByType('2').total }}</div>
@@ -95,6 +97,7 @@
             </el-col>
           </el-row>
           <!-- 输液泵表格 -->
+          <div class="table-scroll">
           <el-table :data="getTableDataByType('2')" border size="small" class="mt16">
             <el-table-column label="使用科室" prop="useDept" min-width="220">
               <template slot-scope="scope">
@@ -106,39 +109,40 @@
             <el-table-column label="10年以上" prop="cnt10" width="100" align="right" />
             <el-table-column label="15年以上" prop="cnt15" width="100" align="right" />
           </el-table>
+          </div>
         </el-tab-pane>
         <el-tab-pane label="注射泵" name="3">
           <!-- 注射泵统计卡片 -->
           <el-row :gutter="16" class="summary-cards">
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">6年以下</div>
                 <div class="card-value">{{ getSummaryByType('3').cnt0 }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">6年以上</div>
                 <div class="card-value">{{ getSummaryByType('3').cnt6 }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">10年以上</div>
                 <div class="card-value">{{ getSummaryByType('3').cnt10 }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card">
                 <div class="card-label">15年以上</div>
                 <div class="card-value">{{ getSummaryByType('3').cnt15 }}</div>
                 <div class="card-unit">台</div>
               </el-card>
             </el-col>
-            <el-col :span="4">
+            <el-col :xs="12" :sm="8" :lg="4">
               <el-card shadow="hover" class="summary-card total">
                 <div class="card-label">合计</div>
                 <div class="card-value">{{ getSummaryByType('3').total }}</div>
@@ -147,6 +151,7 @@
             </el-col>
           </el-row>
           <!-- 注射泵表格 -->
+          <div class="table-scroll">
           <el-table :data="getTableDataByType('3')" border size="small" class="mt16">
             <el-table-column label="使用科室" prop="useDept" min-width="220">
               <template slot-scope="scope">
@@ -158,6 +163,7 @@
             <el-table-column label="10年以上" prop="cnt10" width="100" align="right" />
             <el-table-column label="15年以上" prop="cnt15" width="100" align="right" />
           </el-table>
+          </div>
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -306,5 +312,19 @@ export default {
 }
 .mt16 {
   margin-top: 16px;
+}
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll :deep(.el-table) {
+  min-width: 640px;
+}
+@media (max-width: 768px) {
+  .summary-card .card-value {
+    font-size: 18px;
+    word-break: break-all;
+  }
 }
 </style>

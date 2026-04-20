@@ -6,34 +6,34 @@
       <!-- 三类设备总台数汇总 -->
       <div class="stats-section">
         <h3 class="section-title">设备总台数</h3>
-        <el-row :gutter="16">
-          <el-col :span="8">
+        <el-row :gutter="16" class="summary-row">
+          <el-col :xs="24" :md="10" :lg="8">
             <div ref="summaryPieChart" class="chart-container chart-pie"></div>
           </el-col>
-          <el-col :span="16">
+          <el-col :xs="24" :md="14" :lg="16">
             <el-row :gutter="16" class="summary-cards">
-              <el-col :span="6">
+              <el-col :xs="12" :sm="12" :md="6">
                 <el-card shadow="hover" class="summary-card">
                   <div class="card-label">监护仪</div>
                   <div class="card-value">{{ summary.monitor || 0 }}</div>
                   <div class="card-unit">台</div>
                 </el-card>
               </el-col>
-              <el-col :span="6">
+              <el-col :xs="12" :sm="12" :md="6">
                 <el-card shadow="hover" class="summary-card">
                   <div class="card-label">输液泵</div>
                   <div class="card-value">{{ summary.infusionPump || 0 }}</div>
                   <div class="card-unit">台</div>
                 </el-card>
               </el-col>
-              <el-col :span="6">
+              <el-col :xs="12" :sm="12" :md="6">
                 <el-card shadow="hover" class="summary-card">
                   <div class="card-label">注射泵</div>
                   <div class="card-value">{{ summary.syringePump || 0 }}</div>
                   <div class="card-unit">台</div>
                 </el-card>
               </el-col>
-              <el-col :span="6">
+              <el-col :xs="12" :sm="12" :md="6">
                 <el-card shadow="hover" class="summary-card total">
                   <div class="card-label">合计</div>
                   <div class="card-value">{{ summary.total || 0 }}</div>
@@ -50,15 +50,17 @@
         <el-tabs v-model="activeTab">
           <el-tab-pane label="监护仪" name="1">
             <h4 class="table-title">最近一年的每月使用情况</h4>
-            <el-row :gutter="16">
-              <el-col :span="16">
+            <el-row :gutter="16" class="usage-chart-row">
+              <el-col :xs="24" :lg="16">
                 <div ref="monthlyChart1" class="chart-container"></div>
               </el-col>
-              <el-col :span="8">
+              <el-col :xs="24" :lg="8">
+                <div class="table-scroll">
                 <el-table :data="getUsageByType(usageMonthly, '1')" border size="small" class="usage-table">
                   <el-table-column label="月份" prop="statPeriod" min-width="80" />
                   <el-table-column label="使用台数" prop="totalCount" width="80" align="right" />
                 </el-table>
+                </div>
               </el-col>
             </el-row>
 
@@ -68,29 +70,33 @@
                 <el-option v-for="month in availableMonths" :key="month.value" :label="month.label" :value="month.value"></el-option>
               </el-select>
             </div>
-            <el-row :gutter="16">
-              <el-col :span="16">
+            <el-row :gutter="16" class="usage-chart-row">
+              <el-col :xs="24" :lg="16">
                 <div ref="dailyChart1" class="chart-container"></div>
               </el-col>
-              <el-col :span="8">
+              <el-col :xs="24" :lg="8">
+                <div class="table-scroll">
                 <el-table :data="getUsageByType(usageDaily, '1')" border size="small" class="usage-table">
                   <el-table-column label="日期" prop="statPeriod" min-width="80" />
                   <el-table-column label="使用台数" prop="totalCount" width="80" align="right" />
                 </el-table>
+                </div>
               </el-col>
             </el-row>
           </el-tab-pane>
           <el-tab-pane label="输液泵" name="2">
             <h4 class="table-title">最近一年的每月使用情况</h4>
-            <el-row :gutter="16">
-              <el-col :span="16">
+            <el-row :gutter="16" class="usage-chart-row">
+              <el-col :xs="24" :lg="16">
                 <div ref="monthlyChart2" class="chart-container"></div>
               </el-col>
-              <el-col :span="8">
+              <el-col :xs="24" :lg="8">
+                <div class="table-scroll">
                 <el-table :data="getUsageByType(usageMonthly, '2')" border size="small" class="usage-table">
                   <el-table-column label="月份" prop="statPeriod" min-width="80" />
                   <el-table-column label="使用台数" prop="totalCount" width="80" align="right" />
                 </el-table>
+                </div>
               </el-col>
             </el-row>
 
@@ -100,29 +106,33 @@
                 <el-option v-for="month in availableMonths" :key="month.value" :label="month.label" :value="month.value"></el-option>
               </el-select>
             </div>
-            <el-row :gutter="16">
-              <el-col :span="16">
+            <el-row :gutter="16" class="usage-chart-row">
+              <el-col :xs="24" :lg="16">
                 <div ref="dailyChart2" class="chart-container"></div>
               </el-col>
-              <el-col :span="8">
+              <el-col :xs="24" :lg="8">
+                <div class="table-scroll">
                 <el-table :data="getUsageByType(usageDaily, '2')" border size="small" class="usage-table">
                   <el-table-column label="日期" prop="statPeriod" min-width="80" />
                   <el-table-column label="使用台数" prop="totalCount" width="80" align="right" />
                 </el-table>
+                </div>
               </el-col>
             </el-row>
           </el-tab-pane>
           <el-tab-pane label="注射泵" name="3">
             <h4 class="table-title">最近一年的每月使用情况</h4>
-            <el-row :gutter="16">
-              <el-col :span="16">
+            <el-row :gutter="16" class="usage-chart-row">
+              <el-col :xs="24" :lg="16">
                 <div ref="monthlyChart3" class="chart-container"></div>
               </el-col>
-              <el-col :span="8">
+              <el-col :xs="24" :lg="8">
+                <div class="table-scroll">
                 <el-table :data="getUsageByType(usageMonthly, '3')" border size="small" class="usage-table">
                   <el-table-column label="月份" prop="statPeriod" min-width="80" />
                   <el-table-column label="使用台数" prop="totalCount" width="80" align="right" />
                 </el-table>
+                </div>
               </el-col>
             </el-row>
 
@@ -132,15 +142,17 @@
                 <el-option v-for="month in availableMonths" :key="month.value" :label="month.label" :value="month.value"></el-option>
               </el-select>
             </div>
-            <el-row :gutter="16">
-              <el-col :span="16">
+            <el-row :gutter="16" class="usage-chart-row">
+              <el-col :xs="24" :lg="16">
                 <div ref="dailyChart3" class="chart-container"></div>
               </el-col>
-              <el-col :span="8">
+              <el-col :xs="24" :lg="8">
+                <div class="table-scroll">
                 <el-table :data="getUsageByType(usageDaily, '3')" border size="small" class="usage-table">
                   <el-table-column label="日期" prop="statPeriod" min-width="80" />
                   <el-table-column label="使用台数" prop="totalCount" width="80" align="right" />
                 </el-table>
+                </div>
               </el-col>
             </el-row>
           </el-tab-pane>
@@ -239,7 +251,12 @@ export default {
     },
     activeTab() {
       this.$nextTick(() => {
+        this.ensureUsageChartsForTab(this.activeTab)
         this.updateCharts()
+        // 非当前 tab 内图表曾在 display:none 下初始化会导致宽度为 0，切换后需延迟 resize
+        this.$nextTick(() => {
+          setTimeout(() => this.resizeCharts(), 120)
+        })
       })
     },
     usageMonthly() {
@@ -345,15 +362,24 @@ export default {
     handleMonthChange() {
       this.loadDailyUsage()
     },
-    // 初始化所有图表
+    // 初始化图表：默认「监护仪」tab 可见；输液泵/注射泵在隐藏 pane 内初始化会得到宽度 0，改为首次切换到对应 tab 时再 init（见 ensureUsageChartsForTab）
     initCharts() {
       this.initSummaryPieChart()
       this.initMonthlyChart('1', 'monthlyChart1')
-      this.initMonthlyChart('2', 'monthlyChart2')
-      this.initMonthlyChart('3', 'monthlyChart3')
       this.initDailyChart('1', 'dailyChart1')
-      this.initDailyChart('2', 'dailyChart2')
-      this.initDailyChart('3', 'dailyChart3')
+    },
+    /** 输液泵、注射泵：仅在 tab 可见后再创建 ECharts，避免宽度错误 */
+    ensureUsageChartsForTab(tab) {
+      if (tab === '2') {
+        if (!this.monthlyChart2) this.initMonthlyChart('2', 'monthlyChart2')
+        if (!this.dailyChart2) this.initDailyChart('2', 'dailyChart2')
+      } else if (tab === '3') {
+        if (!this.monthlyChart3) this.initMonthlyChart('3', 'monthlyChart3')
+        if (!this.dailyChart3) this.initDailyChart('3', 'dailyChart3')
+      } else {
+        if (!this.monthlyChart1) this.initMonthlyChart('1', 'monthlyChart1')
+        if (!this.dailyChart1) this.initDailyChart('1', 'dailyChart1')
+      }
     },
     // 初始化设备总台数饼图
     initSummaryPieChart() {
@@ -373,23 +399,50 @@ export default {
         { name: '输液泵', value: this.summary.infusionPump || 0 },
         { name: '注射泵', value: this.summary.syringePump || 0 }
       ].filter(item => item.value > 0) // 只显示有数据的设备类型
-      
+
+      const narrow = typeof window !== 'undefined' && window.innerWidth < 768
+
+      if (data.length === 0) {
+        chart.setOption({
+          title: {
+            text: '暂无数据',
+            left: 'center',
+            top: 'center',
+            textStyle: { color: '#909399', fontSize: 14 }
+          },
+          legend: { show: false },
+          series: [{ type: 'pie', data: [] }]
+        }, { notMerge: true })
+        return
+      }
+
       chart.setOption({
+        title: { show: false },
         tooltip: {
           trigger: 'item',
           formatter: '{a} <br/>{b}: {c} 台 ({d}%)'
         },
-        legend: {
-          orient: 'vertical',
-          left: 'left',
-          bottom: '10%',
-          data: data.map(item => item.name)
-        },
+        legend: narrow
+          ? {
+            orient: 'horizontal',
+            left: 'center',
+            bottom: 4,
+            itemWidth: 10,
+            itemHeight: 10,
+            textStyle: { fontSize: 11 },
+            data: data.map(item => item.name)
+          }
+          : {
+            orient: 'vertical',
+            left: 'left',
+            bottom: '10%',
+            data: data.map(item => item.name)
+          },
         series: [{
           name: '设备总台数',
           type: 'pie',
-          radius: ['40%', '70%'],
-          center: ['60%', '50%'],
+          radius: narrow ? ['34%', '58%'] : ['40%', '70%'],
+          center: narrow ? ['50%', '44%'] : ['60%', '50%'],
           avoidLabelOverlap: false,
           itemStyle: {
             borderRadius: 10,
@@ -397,7 +450,7 @@ export default {
             borderWidth: 2
           },
           label: {
-            show: true,
+            show: !narrow,
             formatter: '{b}\n{c} 台\n({d}%)'
           },
           emphasis: {
@@ -410,7 +463,7 @@ export default {
           data: data,
           color: ['#409EFF', '#67C23A', '#E6A23C']
         }]
-      })
+      }, { notMerge: true })
     },
     // 初始化每月使用情况图表
     initMonthlyChart(equipType, refName) {
@@ -455,7 +508,8 @@ export default {
           axisTick: { show: false } 
         },
         yAxis: { 
-          type: 'value', 
+          type: 'value',
+          minInterval: 1,
           axisTick: { show: false },
           axisLabel: { formatter: '{value}' }
         },
@@ -531,7 +585,8 @@ export default {
           axisTick: { show: false } 
         },
         yAxis: { 
-          type: 'value', 
+          type: 'value',
+          minInterval: 1,
           axisTick: { show: false },
           axisLabel: { formatter: '{value}' }
         },
@@ -614,10 +669,15 @@ export default {
     resizeCharts() {
       const charts = ['summaryPieChart', 'monthlyChart1', 'monthlyChart2', 'monthlyChart3', 'dailyChart1', 'dailyChart2', 'dailyChart3']
       charts.forEach(name => {
-        if (this[name]) {
-          this[name].resize()
+        if (this[name] && typeof this[name].resize === 'function') {
+          try {
+            this[name].resize()
+          } catch (e) {
+            /* ignore */
+          }
         }
       })
+      this.updateSummaryPieChart()
     }
   }
 }
@@ -693,5 +753,32 @@ export default {
 }
 .chart-pie {
   height: 200px;
+}
+.usage-chart-row .el-col {
+  margin-bottom: 8px;
+}
+@media (min-width: 1200px) {
+  .usage-chart-row .el-col {
+    margin-bottom: 0;
+  }
+}
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll .el-table {
+  min-width: 200px;
+}
+@media (max-width: 1199px) {
+  .chart-pie {
+    height: 260px;
+    min-height: 220px;
+  }
+}
+@media (max-width: 767px) {
+  .summary-card .card-value {
+    font-size: 20px;
+  }
 }
 </style>

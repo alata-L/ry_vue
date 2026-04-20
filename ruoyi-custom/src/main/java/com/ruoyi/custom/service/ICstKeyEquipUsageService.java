@@ -14,6 +14,8 @@ public interface ICstKeyEquipUsageService {
 
     CstKeyEquipUsage selectCstKeyEquipUsageById(Long id);
 
+    CstKeyEquipUsage selectByEquipIdAndReportDate(Long equipId, String reportDate);
+
     int saveCstKeyEquipUsage(CstKeyEquipUsage row);
 
     int deleteCstKeyEquipUsageByIds(Long[] ids);

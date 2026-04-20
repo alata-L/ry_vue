@@ -1,5 +1,6 @@
 package com.ruoyi.web.controller.custom;
 
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,11 +16,14 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.custom.domain.CstLifeUsage;
 import com.ruoyi.custom.domain.CstReportUsageHist;
@@ -60,6 +64,82 @@ public class CstLifeUsageController extends BaseController {
         createByNickNameHelper.fillReportUsageHistReporterNick(list);
         createByNickNameHelper.fillReportUsageHistUseDeptDisplay(list);
         return getDataTable(list);
+    }
+
+    @Log(title = "通用设备使用上报", businessType = BusinessType.IMPORT)
+    @PreAuthorize("@ss.hasPermi('custom:lifeUsage:import')")
+    @PostMapping("/importData")
+    public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception {
+        if (file == null || file.isEmpty()) {
+            return error("上传文件不能为空");
+        }
+        ExcelUtil<CstLifeUsage> util = new ExcelUtil<>(CstLifeUsage.class);
+        List<CstLifeUsage> rows = util.importExcel(file.getInputStream());
+        if (rows == null || rows.isEmpty()) {
+            throw new ServiceException("导入数据不能为空");
+        }
+        int successNum = 0;
+        int failureNum = 0;
+        StringBuilder failureMsg = new StringBuilder();
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        for (int i = 0; i < rows.size(); i++) {
+            CstLifeUsage row = rows.get(i);
+            int line = i + 2;
+            try {
+                row.setId(null);
+                if (row.getStatDate() == null) {
+                    failureNum++;
+                    failureMsg.append("<br/>").append(line).append("、上报日期不能为空");
+                    continue;
+                }
+                if (StringUtils.isEmpty(row.getEquipType())) {
+                    failureNum++;
+                    failureMsg.append("<br/>").append(line).append("、设备类型不能为空");
+                    continue;
+                }
+                if (StringUtils.isEmpty(row.getUseDept())) {
+                    failureNum++;
+                    failureMsg.append("<br/>").append(line).append("、使用科室不能为空");
+                    continue;
+                }
+                if (row.getUsedCount() == null) {
+                    failureNum++;
+                    failureMsg.append("<br/>").append(line).append("、当日使用台数不能为空");
+                    continue;
+                }
+                row.setEquipType(row.getEquipType().trim());
+                row.setUseDept(normalizeUseDeptCode(row.getUseDept()));
+                if (!validateCommonLifeUsageWrite(row)) {
+                    failureNum++;
+                    failureMsg.append("<br/>").append(line).append("、无权限为该使用科室上报");
+                    continue;
+                }
+                String statDateStr = df.format(row.getStatDate());
+                CstLifeUsage exist = cstLifeUsageService.selectCstLifeUsageByUnique(statDateStr, row.getEquipType(), row.getUseDept());
+                if (exist != null && !updateSupport) {
+                    failureNum++;
+                    failureMsg.append("<br/>").append(line).append("、该日期+设备类型+科室已存在数据，请勾选「更新已存在」或删除后重试");
+                    continue;
+                }
+                cstLifeUsageService.saveCstLifeUsage(row);
+                successNum++;
+            } catch (Exception e) {
+                failureNum++;
+                failureMsg.append("<br/>").append(line).append("、导入失败：").append(e.getMessage());
+            }
+        }
+        if (failureNum > 0) {
+            failureMsg.insert(0, "导入完成：成功 " + successNum + " 条，失败 " + failureNum + " 条。错误如下：");
+            throw new ServiceException(failureMsg.toString());
+        }
+        return success("恭喜您，数据已全部导入成功！共 " + successNum + " 条");
+    }
+
+    @PostMapping("/importTemplate")
+    @PreAuthorize("@ss.hasPermi('custom:lifeUsage:import')")
+    public void importTemplate(HttpServletResponse response) {
+        ExcelUtil<CstLifeUsage> util = new ExcelUtil<>(CstLifeUsage.class);
+        util.importTemplateExcel(response, "通用设备上报导入模板");
     }
 
     @Log(title = "通用设备使用上报", businessType = BusinessType.EXPORT)
@@ -177,6 +257,17 @@ public class CstLifeUsageController extends BaseController {
             return false;
         }
         return cstCommonUseDeptScopeService.isUseDeptAllowed(row.getUseDept());
+    }
+
+    /** Excel 字典/数字格解析为与库表一致的科室编码字符串 */
+    private static String normalizeUseDeptCode(Object raw) {
+        if (raw == null) {
+            return "";
+        }
+        if (raw instanceof Number) {
+            return String.valueOf(((Number) raw).longValue());
+        }
+        return String.valueOf(raw).trim();
     }
 
     /**
